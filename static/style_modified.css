@@ -38,7 +38,7 @@ body {
     box-sizing: border-box;
 }
 
-.container button {
+/*.container button {
     width: 100%;
     padding: 0.5rem;
     background-color: #007bff;
@@ -46,7 +46,7 @@ body {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-}
+}*/
 
 h1, h2, h3 {
     color: #333333;
