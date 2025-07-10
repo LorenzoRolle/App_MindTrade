@@ -57,13 +57,14 @@ p {
 }
 
 a {
-    display: inline-block;
+    display: inline;
     margin-top: 1rem;
-    text-decoration: none;
-    color: #ffffff;
+    text-decoration: underline;
+    color: blue;
     padding: 0.5rem 1rem;
-    border-radius: 4px;
+    border: none;
     transition: background-color 0.3s ease;
+    cursor: pointer;
 }
 
 /*a:hover {
