@@ -61,15 +61,14 @@ a {
     margin-top: 1rem;
     text-decoration: none;
     color: #ffffff;
-    background-color: #007BFF;
     padding: 0.5rem 1rem;
     border-radius: 4px;
     transition: background-color 0.3s ease;
 }
 
-a:hover {
+/*a:hover {
     background-color: #0056b3;
-}
+}*/
 
 input[type="text"],
 input[type="password"],
