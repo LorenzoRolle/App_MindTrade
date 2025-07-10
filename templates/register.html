@@ -2,9 +2,10 @@
 <html>
 <head>
     <title>Registrazione</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_modified.css') }}">
 </head>
 <body>
+  <div class="container">
     <h2>Registrati</h2>
     <form method="post">
         <input type="text" name="username" placeholder="Username" required><br>
@@ -13,6 +14,7 @@
         <button type="submit">Registrati</button>
     </form>
     <p>Hai già un account? <a href="/login">Login</a></p>
+  </div>
 </body>
 </html>
 

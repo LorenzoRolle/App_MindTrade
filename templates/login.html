@@ -2,9 +2,10 @@
 <html>
 <head>
     <title>Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_modified.css') }}">
 </head>
 <body>
+  <div class="container">
     <h2>Login</h2>
     <form method="post">
         <input type="text" name="username" placeholder="Username" required><br>
@@ -12,6 +13,7 @@
         <button type="submit">Login</button>
     </form>
     <p>Non hai un account? <a href="/register">Registrati</a></p>
+  </div>
 </body>
 </html>
 
