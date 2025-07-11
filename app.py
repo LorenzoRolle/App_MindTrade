@@ -17,7 +17,7 @@ app.secret_key = 'supersegretissima'
 def home():
     if 'user' in session:
         return redirect('/welcome')
-    return redirect('/login')
+    return redirect('/test_login_pt1')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

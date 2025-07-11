@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Trade Input - MindTrade</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f6f8fa;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.05);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    button {
+      margin-top: 25px;
+      padding: 12px;
+      width: 100%;
+      background-color: #007bff;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Insert Trade Data</h2>
+    <form action="/submit-trade" method="POST">
+      
+      <label for="entry_price">Entry Price *</label>
+      <input type="number" step="0.01" id="entry_price" name="entry_price" required>
+
+      <label for="exit_price">Exit Price *</label>
+      <input type="number" step="0.01" id="exit_price" name="exit_price" required>
+
+      <label for="account_size">Account Size *</label>
+      <input type="number" step="0.01" id="account_size" name="account_size" required>
+
+      <label for="fraction_invested">Fraction Invested (e.g., 0.2 for 20%) *</label>
+      <input type="number" step="0.01" id="fraction_invested" name="fraction_invested" required>
+
+      <label for="entry_time">Entry Timestamp *</label>
+      <input type="datetime-local" id="entry_time" name="entry_time" required>
+
+      <label for="exit_time">Exit Timestamp *</label>
+      <input type="datetime-local" id="exit_time" name="exit_time" required>
+
+      <label for="notes">Notes / Sentiment *</label>
+      <textarea id="notes" name="notes" required placeholder="Write your thoughts, emotions, or reasons for this trade..."></textarea>
+
+      <label for="asset_type">Asset Type (Optional)</label>
+      <select id="asset_type" name="asset_type">
+        <option value="">-- Select --</option>
+        <option value="stock">Stock</option>
+        <option value="etf">ETF</option>
+        <option value="crypto">Crypto</option>
+        <option value="forex">Forex</option>
+      </select>
+
+      <button type="submit">Submit Trade</button>
+    </form>
+  </div>
+</body>
+</html>

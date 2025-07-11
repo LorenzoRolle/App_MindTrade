@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MindTrade – Behavioral Trading Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --bg-light: #f9fafb;
+      --text-dark: #1f2937;
+      --text-muted: #6b7280;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    /* 🔷 Header */
+    header {
+      padding: 1.5rem 2rem;
+      background-color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo {
+      height: 40px;
+      width: auto;
+    }
+
+    nav a {
+      margin-left: 2rem;
+      text-decoration: none;
+      color: var(--text-dark);
+      font-weight: 600;
+      transition: color 0.3s;
+    }
+
+    nav a:hover {
+      color: var(--primary);
+    }
+
+    /* 🔷 Hero Section */
+    .hero {
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      background: linear-gradient(to right, var(--primary), #60a5fa);
+      color: white;
+    }
+
+    .hero h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    .hero button {
+      background-color: #ffffff;
+      color: var(--primary);
+      border: none;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .hero button:hover {
+      background-color: #f0f0f0;
+    }
+
+    /* 🔷 Section */
+    .section {
+      padding: 4rem 2rem;
+      max-width: 1000px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .section h3 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--text-dark);
+    }
+
+    .section p {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    /* 🔷 Features */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+      text-align: left;
+    }
+
+    .features-grid div h4 {
+      font-size: 1.2rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .features-grid div p {
+      font-size: 0.95rem;
+      color: var(--text-dark);
+    }
+
+    /* 🔷 Footer */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.9rem;
+      color: #999;
+    }
+
+    @media (max-width: 600px) {
+      .hero h2 {
+        font-size: 2rem;
+      }
+
+      nav a {
+        margin-left: 1rem;
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 🔷 Header -->
+  <header>
+    <div class="logo-container">
+      <img src="logo.png" alt="MindTrade Logo" class="logo" />
+      <span style="font-weight: 800; font-size: 1.4rem;">MindTrade</span>
+    </div>
+    <nav>
+      <a href="#">Home</a>
+      <a href="#features">Features</a>
+      <a href="login.html">Sign In</a>
+    </nav>
+  </header>
+
+  <!-- 🔷 Hero Section -->
+  <section class="hero">
+    <h2>Trade Smarter with Behavioral Insights</h2>
+    <p>MindTrade helps you detect trading biases and make better decisions.</p>
+    <button>Get Started</button>
+  </section>
+
+  <!-- 🔷 Why MindTrade -->
+  <section class="section">
+    <h3>Why MindTrade?</h3>
+    <p>Most traders fall victim to emotional decisions. MindTrade analyzes your behavior and provides unbiased feedback so you can stay rational, focused, and successful.</p>
+  </section>
+
+  <!-- 🔷 Features -->
+  <section id="features" class="section">
+    <h3>Core Features</h3>
+    <div class="features-grid">
+      <div>
+        <h4>🎯 Bias Detection</h4>
+        <p>Spot Overconfidence, Loss Aversion, and more using smart behavior analytics.</p>
+      </div>
+      <div>
+        <h4>📊 Trade Insights</h4>
+        <p>Break down your trading habits and see performance patterns over time.</p>
+      </div>
+      <div>
+        <h4>🧠 Personalized Feedback</h4>
+        <p>Get actionable tips tailored to your trading behavior and emotional signals.</p>
+      </div>
+      <div style="text-align: center;">
+        <h4>📚 Micro-Lessons <span style="font-size: 0.8rem; color: #999;">(Coming Soon)</span></h4>
+        <p>Learn about cognitive biases and behavioral finance in bite-sized lessons.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 🔷 Footer -->
+  <footer>
+    &copy; 2025 MindTrade. All rights reserved.
+  </footer>
+
+</body>
+</html>
