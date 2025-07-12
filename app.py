@@ -57,7 +57,7 @@ def register():
         finally:
             conn.close()
 
-        return redirect('/login')
+        return redirect('/trade_input')
 
     return render_template('register.html')
 
