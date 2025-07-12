@@ -67,7 +67,7 @@ def intro():
 
 @app.route('/trade_input', methods=['GET', 'POST'])
 def trade_input():
-    if 'email' not in session:
+    if 'user' not in session:
         return redirect('/login')
 
     if request.method == 'POST':
