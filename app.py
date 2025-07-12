@@ -16,8 +16,8 @@ app.secret_key = 'supersegretissima'
 @app.route('/')
 def home():
     if 'user' in session:
-        return redirect('/welcome')
-    return redirect('/test_login_pt1')
+        return redirect('/trade_input')
+    return redirect('/intro')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -27,13 +27,13 @@ def login():
 
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
-        c.execute("SELECT password FROM utenti WHERE username = ?", (username,))
+        c.execute("SELECT password FROM UTENTE WHERE username = ?", (username,))
         user = c.fetchone()
         conn.close()
 
         if user and check_password_hash(user[0], password):
             session['user'] = username
-            return redirect('/welcome')
+            return redirect('/trade_input')
         else:
             return "Username o password errati"
 
@@ -49,7 +49,7 @@ def register():
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
         try:
-            c.execute("INSERT INTO utenti (username, email, password) VALUES (?, ?, ?)", 
+            c.execute("INSERT INTO UTENTE (username, email, password) VALUES (?, ?, ?)", 
                       (username, email, password))
             conn.commit()
         except sqlite3.IntegrityError:
@@ -61,19 +61,47 @@ def register():
 
     return render_template('register.html')
 
-@app.route('/welcome')
-def welcome():
-    if 'user' not in session:
-        return redirect('/login')
-    return render_template('welcome.html', user=session['user'])
+@app.route('/intro', methods=['GET', 'POST'])
+def intro():
+    return render_template('intro.html')
 
-@app.route('/logout')
-def logout():
-    session.pop('user', None)
-    return redirect('/login')
-    
+@app.route('/trade_input', methods=['GET', 'POST'])
+def trade_input():
+    if 'email' not in session:
+        return redirect('/login')
+
+    if request.method == 'POST':
+        email = session['email']
+        entry_price = request.form['entry_price']
+        exit_price = request.form['exit_price']
+        entry_timestamp = request.form['entry_timestamp']
+        exit_timestamp = request.form['exit_timestamp']
+        account_size = request.form['account_size']
+        fraction_invested = request.form['fraction_invested']
+        notes = request.form['notes']
+        asset_type = request.form['asset_type']
+
+        conn = get_db_connection()
+        try:
+            conn.execute('''
+                INSERT INTO NOTIFICA (
+                    email, entry_price, exit_price, entry_timestamp, exit_timestamp,
+                    account_size, fraction_invested, notes, asset_type
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                email, entry_price, exit_price, entry_timestamp, exit_timestamp,
+                account_size, fraction_invested, notes, asset_type
+            ))
+            conn.commit()
+        except sqlite3.IntegrityError as e:
+            conn.close()
+            return f'Error in saving: {e}'
+        conn.close()
+        return 'Data successfully saved!'
+
+    return render_template('trade_input.html')
+
 if __name__ == '__main__':
-    init_db()  # crea il DB e le tabelle da data.sql
     app.run(debug=True)
 
 #per adesso ho chiesto a chat, poi mi informo bene su come funziona il ciò
