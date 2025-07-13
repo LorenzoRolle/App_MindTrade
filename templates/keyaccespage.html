@@ -319,12 +319,11 @@
   /* PLACEHOLDER CYCLING */
   const input = document.getElementById('accessKeyInput');
   const placeholders = [
-    "Try the ultimate key...",
-    "Hint: Mix upper & lower",
-    "Hint: Include special chars",
-    "Hint: Don't forget numbers",
-    "Hint: Length matters!",
-    "Think hacker style 🔐"
+    "Enter your access key...",
+    "Contact admin for key",
+    "Key required for access",
+    "Authorization needed",
+    "Secure access portal"
   ];
   let placeholderIndex = 0;
   setInterval(() => {
@@ -349,110 +348,6 @@
     const strength = calcStrength(val);
     strengthBar.style.width = strength + '%';
   });
-
-  /* KEY VALIDATION & LOCKOUT */
-  const correctKey = "X9v!$dZ7#rQf@P3&lmT^wYSjNkV8Hg6";
-
-  let failCount = 0;
-  let lockedUntil = 0;
-
-  const message = document.getElementById('message');
-  const submitBtn = document.getElementById('submitBtn');
-
-  function setMessage(text, type) {
-    message.textContent = text;
-    message.className = 'message visible ' + (type || '');
-  }
-  function clearMessage() {
-    message.textContent = '';
-    message.className = 'message';
-  }
-
-  function lockout(seconds) {
-    lockedUntil = Date.now() + seconds*1000;
-    submitBtn.disabled = true;
-    setMessage(`Too many failed attempts. Try again in ${seconds} seconds.`, 'error');
-    let interval = setInterval(() => {
-      const remaining = Math.ceil((lockedUntil - Date.now())/1000);
-      if (remaining <= 0) {
-        clearInterval(interval);
-        submitBtn.disabled = false;
-        clearMessage();
-      } else {
-        setMessage(`Too many failed attempts. Try again in ${remaining} seconds.`, 'error');
-      }
-    }, 1000);
-  }
-
-  function checkKey() {
-    if (Date.now() < lockedUntil) return;
-    const val = input.value.trim();
-    if (!val) {
-      setMessage("Please enter a key!", "error");
-      return;
-    }
-
-    // Complex validation - full match
-    if (val === correctKey) {
-      setMessage("Access Granted! Redirecting...", "success");
-      playSound('success');
-      setTimeout(() => window.location.href = "/intro", 1500);
-      return;
-    }
-
-    // Partial hints on common mistakes (examples)
-    if (val.length < 12) {
-      setMessage("Key too short!", "error");
-    } else if (!/[A-Z]/.test(val)) {
-      setMessage("Include uppercase letters!", "error");
-    } else if (!/[a-z]/.test(val)) {
-      setMessage("Include lowercase letters!", "error");
-    } else if (!/\d/.test(val)) {
-      setMessage("Include numbers!", "error");
-    } else if (!/[^A-Za-z0-9]/.test(val)) {
-      setMessage("Include special characters!", "error");
-    } else {
-      setMessage("Invalid key, try again.", "error");
-    }
-
-    failCount++;
-    playSound('error');
-
-    if (failCount >= 3) {
-      lockout(15);
-      failCount = 0;
-    }
-  }
-
-  submitBtn.addEventListener('click', checkKey);
-  input.addEventListener('keydown', e => {
-    if(e.key === "Enter") checkKey();
-  });
-
-  input.addEventListener('input', clearMessage);
-
-  /* SIMPLE SOUNDS */
-  function playSound(type) {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    let oscillator = ctx.createOscillator();
-    let gainNode = ctx.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
-
-    if(type === 'success') {
-      oscillator.frequency.value = 880;
-      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-      oscillator.start();
-      oscillator.stop(ctx.currentTime + 0.15);
-    }
-    else if(type === 'error') {
-      oscillator.frequency.value = 220;
-      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-      oscillator.start();
-      oscillator.stop(ctx.currentTime + 0.25);
-    }
-  }
 </script>
 
 </body>
