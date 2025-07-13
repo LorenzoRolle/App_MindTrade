@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Access Key - Hacker Ultra</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap');
+
+    /* Reset */
+    * {
+      box-sizing: border-box;
+    }
+    body, html {
+      margin: 0;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+      font-family: 'Source Code Pro', monospace;
+      color: #00ffea;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+    }
+
+    /* Matrix background */
+    canvas#matrix {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+
+    /* Container */
+    .container {
+      position: relative;
+      z-index: 10;
+      background: rgba(0,0,0,0.85);
+      border: 2px solid #00ffea;
+      border-radius: 14px;
+      padding: 48px 60px;
+      width: 380px;
+      box-shadow: 0 0 35px #00ffea;
+      text-align: center;
+    }
+
+    /* Glitchy typing effect for title */
+    .typing-title {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: 3px;
+      margin-bottom: 35px;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 3px solid #00ffea;
+      animation: typing 4s steps(26, end), blink-caret 0.75s step-end infinite;
+      position: relative;
+    }
+    /* glitch overlays */
+    .typing-title::before, .typing-title::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      overflow: hidden;
+      clip-path: polygon(0 2%, 100% 2%, 100% 15%, 0 15%);
+      opacity: 0.8;
+      color: #00ffea;
+      animation: glitch 2s infinite;
+    }
+    .typing-title::after {
+      clip-path: polygon(0 80%, 100% 80%, 100% 95%, 0 95%);
+      animation-delay: 1s;
+      opacity: 0.6;
+    }
+
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 26ch }
+    }
+    @keyframes blink-caret {
+      50% { border-color: transparent; }
+    }
+    @keyframes glitch {
+      0% {
+        clip-path: polygon(0 2%, 100% 2%, 100% 15%, 0 15%);
+        transform: translate(0);
+        opacity: 0.8;
+      }
+      20% {
+        clip-path: polygon(0 5%, 100% 5%, 100% 15%, 0 15%);
+        transform: translate(-2px, -2px);
+        opacity: 0.9;
+      }
+      40% {
+        clip-path: polygon(0 3%, 100% 3%, 100% 13%, 0 13%);
+        transform: translate(2px, 2px);
+        opacity: 0.7;
+      }
+      60% {
+        clip-path: polygon(0 6%, 100% 6%, 100% 14%, 0 14%);
+        transform: translate(-2px, 1px);
+        opacity: 0.85;
+      }
+      80% {
+        clip-path: polygon(0 4%, 100% 4%, 100% 12%, 0 12%);
+        transform: translate(1px, -1px);
+        opacity: 0.8;
+      }
+      100% {
+        clip-path: polygon(0 2%, 100% 2%, 100% 15%, 0 15%);
+        transform: translate(0);
+        opacity: 0.8;
+      }
+    }
+
+    /* Input with animated placeholder cycling */
+    input[type="password"] {
+      width: 100%;
+      background: #001a1a;
+      border: 2px solid #00ffea;
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 1.3rem;
+      color: #00fff7;
+      outline: none;
+      box-shadow: 0 0 15px #00fff7;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+      text-shadow: 0 0 8px #00fff7;
+      caret-color: #00ffea;
+    }
+    input[type="password"]:focus {
+      border-color: #00ffaa;
+      box-shadow: 0 0 25px #00ffaa, 0 0 35px #00ffaa inset;
+    }
+
+    /* Placeholder text cycling animation */
+    @keyframes placeholderFade {
+      0%, 20% {opacity: 1;}
+      25%, 95% {opacity: 0;}
+      100% {opacity: 1;}
+    }
+    input::placeholder {
+      animation: placeholderFade 6s infinite;
+      transition: opacity 0.5s ease;
+    }
+
+    /* Submit button with ripple & glow */
+    button {
+      margin-top: 28px;
+      width: 100%;
+      padding: 16px 0;
+      background: linear-gradient(45deg, #00ffea, #00ffaa);
+      border: none;
+      border-radius: 14px;
+      font-weight: 900;
+      font-size: 1.25rem;
+      color: black;
+      cursor: pointer;
+      box-shadow:
+        0 0 12px #00ffea,
+        0 0 25px #00ffaa,
+        0 0 40px #00ffaa inset;
+      transition: background 0.5s ease, box-shadow 0.5s ease;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+    button:hover {
+      background: linear-gradient(90deg, #00ffaa, #00ffea);
+      box-shadow:
+        0 0 20px #00ffaa,
+        0 0 40px #00ffea,
+        0 0 60px #00ffea inset;
+      animation: pulseGlow 1.5s infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% {
+        box-shadow:
+          0 0 20px #00ffaa,
+          0 0 40px #00ffea,
+          0 0 60px #00ffea inset;
+      }
+      50% {
+        box-shadow:
+          0 0 30px #00ffea,
+          0 0 50px #00ffaa,
+          0 0 80px #00ffaa inset;
+      }
+    }
+    /* Ripple effect */
+    button:active::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 200%;
+      height: 200%;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      animation: ripple 0.6s linear;
+      pointer-events: none;
+      z-index: 5;
+    }
+    @keyframes ripple {
+      to {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0;
+      }
+    }
+
+    /* Password strength meter */
+    .strength-meter {
+      margin-top: 18px;
+      height: 8px;
+      border-radius: 6px;
+      background: #004040;
+      overflow: hidden;
+      box-shadow: inset 0 0 8px #007f7f;
+    }
+    .strength-bar {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #ff0033, #ff9900, #00ff00);
+      transition: width 0.4s ease;
+      border-radius: 6px;
+      box-shadow: 0 0 15px #00ff00;
+    }
+
+    /* Messages */
+    .message {
+      margin-top: 22px;
+      font-weight: 700;
+      letter-spacing: 1.3px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      user-select: none;
+      min-height: 24px;
+    }
+    .message.visible {
+      opacity: 1;
+    }
+    .message.error {
+      color: #ff0033;
+      text-shadow: 0 0 6px #ff0033;
+    }
+    .message.success {
+      color: #00ff77;
+      text-shadow: 0 0 6px #00ff77;
+    }
+
+  </style>
+</head>
+<body>
+
+<canvas id="matrix"></canvas>
+
+<div class="container" role="main" aria-label="Access key input">
+  <h1 class="typing-title" data-text="ENTER ACCESS KEY">ENTER ACCESS KEY</h1>
+  <form method="post">
+  <input
+    type="password"
+    id="accessKeyInput"
+    placeholder="Try the ultimate key..."
+    autocomplete="off"
+    spellcheck="false"
+    aria-label="Access key"
+  />
+  <button id="submitBtn">SUBMIT</button>
+  </form>
+  <div class="strength-meter" aria-hidden="true">
+    <div class="strength-bar" id="strengthBar"></div>
+  </div>
+  <p id="message" role="alert" aria-live="assertive"></p>
+</div>
+
+<script>
+  /* MATRIX RAIN EFFECT */
+  const canvas = document.getElementById('matrix');
+  const ctx = canvas.getContext('2d');
+
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+
+  const letters = '01';
+  const fontSize = 16;
+  const columns = Math.floor(width / fontSize);
+  const drops = [];
+
+  for(let i = 0; i < columns; i++) drops[i] = Math.random() * height;
+
+  function drawMatrix() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = '#00ffea';
+    ctx.font = fontSize + 'px Source Code Pro';
+
+    for(let i = 0; i < drops.length; i++) {
+      const text = letters.charAt(Math.floor(Math.random() * letters.length));
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+      if(drops[i] * fontSize > height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  }
+  setInterval(drawMatrix, 40);
+
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+
+  /* PLACEHOLDER CYCLING */
+  const input = document.getElementById('accessKeyInput');
+  const placeholders = [
+    "Try the ultimate key...",
+    "Hint: Mix upper & lower",
+    "Hint: Include special chars",
+    "Hint: Don't forget numbers",
+    "Hint: Length matters!",
+    "Think hacker style 🔐"
+  ];
+  let placeholderIndex = 0;
+  setInterval(() => {
+    placeholderIndex = (placeholderIndex + 1) % placeholders.length;
+    input.setAttribute('placeholder', placeholders[placeholderIndex]);
+  }, 4000);
+
+  /* PASSWORD STRENGTH */
+  const strengthBar = document.getElementById('strengthBar');
+  function calcStrength(password) {
+    let score = 0;
+    if (!password) return 0;
+    if (password.length >= 12) score += 30;
+    if (/[a-z]/.test(password)) score += 20;
+    if (/[A-Z]/.test(password)) score += 20;
+    if (/\d/.test(password)) score += 15;
+    if (/[^A-Za-z0-9]/.test(password)) score += 15;
+    return Math.min(score, 100);
+  }
+  input.addEventListener('input', () => {
+    const val = input.value;
+    const strength = calcStrength(val);
+    strengthBar.style.width = strength + '%';
+  });
+
+  /* KEY VALIDATION & LOCKOUT */
+  const correctKey = "X9v!$dZ7#rQf@P3&lmT^wYSjNkV8Hg6";
+
+  let failCount = 0;
+  let lockedUntil = 0;
+
+  const message = document.getElementById('message');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function setMessage(text, type) {
+    message.textContent = text;
+    message.className = 'message visible ' + (type || '');
+  }
+  function clearMessage() {
+    message.textContent = '';
+    message.className = 'message';
+  }
+
+  function lockout(seconds) {
+    lockedUntil = Date.now() + seconds*1000;
+    submitBtn.disabled = true;
+    setMessage(`Too many failed attempts. Try again in ${seconds} seconds.`, 'error');
+    let interval = setInterval(() => {
+      const remaining = Math.ceil((lockedUntil - Date.now())/1000);
+      if (remaining <= 0) {
+        clearInterval(interval);
+        submitBtn.disabled = false;
+        clearMessage();
+      } else {
+        setMessage(`Too many failed attempts. Try again in ${remaining} seconds.`, 'error');
+      }
+    }, 1000);
+  }
+
+  function checkKey() {
+    if (Date.now() < lockedUntil) return;
+    const val = input.value.trim();
+    if (!val) {
+      setMessage("Please enter a key!", "error");
+      return;
+    }
+
+    // Complex validation - full match
+    if (val === correctKey) {
+      setMessage("Access Granted! Redirecting...", "success");
+      playSound('success');
+      setTimeout(() => window.location.href = "/intro", 1500);
+      return;
+    }
+
+    // Partial hints on common mistakes (examples)
+    if (val.length < 12) {
+      setMessage("Key too short!", "error");
+    } else if (!/[A-Z]/.test(val)) {
+      setMessage("Include uppercase letters!", "error");
+    } else if (!/[a-z]/.test(val)) {
+      setMessage("Include lowercase letters!", "error");
+    } else if (!/\d/.test(val)) {
+      setMessage("Include numbers!", "error");
+    } else if (!/[^A-Za-z0-9]/.test(val)) {
+      setMessage("Include special characters!", "error");
+    } else {
+      setMessage("Invalid key, try again.", "error");
+    }
+
+    failCount++;
+    playSound('error');
+
+    if (failCount >= 3) {
+      lockout(15);
+      failCount = 0;
+    }
+  }
+
+  submitBtn.addEventListener('click', checkKey);
+  input.addEventListener('keydown', e => {
+    if(e.key === "Enter") checkKey();
+  });
+
+  input.addEventListener('input', clearMessage);
+
+  /* SIMPLE SOUNDS */
+  function playSound(type) {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    let oscillator = ctx.createOscillator();
+    let gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    if(type === 'success') {
+      oscillator.frequency.value = 880;
+      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.15);
+    }
+    else if(type === 'error') {
+      oscillator.frequency.value = 220;
+      gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.25);
+    }
+  }
+</script>
+
+</body>
+</html>

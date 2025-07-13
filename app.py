@@ -17,7 +17,19 @@ app.secret_key = 'supersegretissima'
 def home():
     if 'user' in session:
         return redirect('/trade_input')
-    return redirect('/intro')
+    return redirect('/keyaccesspage')
+    
+
+@app.route('/keyaccesspage', methods=['GET', 'POST'])
+def keyaccess():
+    if request.method == 'POST':
+        access_key = request.form['access_key']
+        if access_key == 'X9v!$dZ7#rQf@P3&lmT^wYSjNkV8Hg6':
+            return redirect('/intro')
+        else:
+            return "Access Denied. Invalid Key."
+    return render_template('keyaccesspage.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
