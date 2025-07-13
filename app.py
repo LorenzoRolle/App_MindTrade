@@ -21,10 +21,11 @@ def home():
     
 
 @app.route('/keyaccesspage', methods=['GET', 'POST'])
-def keyaccess():
+def keyaccesspage():
     if request.method == 'POST':
         access_key = request.form['access_key']
         if access_key == 'X9v!$dZ7#rQf@P3&lmT^wYSjNkV8Hg6':
+            session['access_granted'] = True
             return redirect('/intro')
         else:
             return "Access Denied. Invalid Key."
