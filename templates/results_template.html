@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindTrade - Bias Analysis Result</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+  <div class="max-w-xl mx-auto p-6 mt-10 bg-white rounded-2xl shadow-xl">
+    <h1 class="text-3xl font-bold text-center mb-6">🧠 Your Trading Analysis</h1>
+
+    <!-- Bias Scores -->
+    <div class="space-y-4">
+      <div class="bg-blue-100 p-4 rounded-xl shadow-sm">
+        <h2 class="text-xl font-semibold">📉 Overconfidence Score:</h2>
+        <p class="text-2xl font-bold text-blue-700">{{ results.overconfidence_score }}%</p>
+      </div>
+
+      <div class="bg-yellow-100 p-4 rounded-xl shadow-sm">
+        <h2 class="text-xl font-semibold">😟 Loss Aversion Score:</h2>
+        <p class="text-2xl font-bold text-yellow-700">{{ results.loss_aversion_score }}%</p>
+      </div>
+    </div>
+
+    <!-- Feedback Message -->
+    <div class="mt-6 bg-gray-50 border-l-4 border-gray-400 p-4 rounded-md">
+      <p class="text-gray-700 italic">{{ results.message }}</p>
+    </div>
+
+    <!-- Suggestions -->
+    <div class="mt-6">
+      <h3 class="font-semibold mb-2">📘 Suggested Micro-Lesson:</h3>
+      <a href="/micro-lessons/{{ results.suggested_lesson }}" class="text-blue-600 hover:underline">
+        {% if results.suggested_lesson == 'overconfidence' %}
+          Understanding Overconfidence in Trading →
+        {% else %}
+          Managing Loss Aversion in Trading →
+        {% endif %}
+      </a>
+    </div>
+
+    <!-- Score Interpretation -->
+    <div class="mt-6 bg-indigo-50 p-4 rounded-xl">
+      <h3 class="font-semibold mb-2 text-indigo-800">📊 Score Interpretation:</h3>
+      <div class="text-sm text-indigo-700 space-y-1">
+        {% if results.overconfidence_score > 70 %}
+          <p>• <strong>High Overconfidence:</strong> Consider reducing position sizes and implementing stricter risk management.</p>
+        {% elif results.overconfidence_score > 40 %}
+          <p>• <strong>Moderate Overconfidence:</strong> Be mindful of your position sizing and market sentiment.</p>
+        {% else %}
+          <p>• <strong>Low Overconfidence:</strong> Good risk management practices observed.</p>
+        {% endif %}
+        
+        {% if results.loss_aversion_score > 60 %}
+          <p>• <strong>High Loss Aversion:</strong> You may be holding losing positions too long. Consider setting stop losses.</p>
+        {% elif results.loss_aversion_score > 30 %}
+          <p>• <strong>Moderate Loss Aversion:</strong> Monitor your exit timing for losing trades.</p>
+        {% else %}
+          <p>• <strong>Low Loss Aversion:</strong> Balanced approach to winning and losing trades.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="mt-8 flex space-x-4">
+      <a href="/trade_input" class="flex-1 bg-blue-600 text-white text-center px-6 py-3 rounded-full hover:bg-blue-700 transition">
+        Enter Another Trade
+      </a>
+      <a href="/view_notifications" class="flex-1 bg-gray-600 text-white text-center px-6 py-3 rounded-full hover:bg-gray-700 transition">
+        View All Trades
+      </a>
+    </div>
+
+    <!-- Logout Button -->
+    <div class="mt-4 text-center">
+      <a href="/logout" class="text-gray-500 hover:text-gray-700 text-sm">
+        Logout
+      </a>
+    </div>
+  </div>
+
+</body>
+</html>
