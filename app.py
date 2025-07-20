@@ -3,9 +3,16 @@ import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
+# Definisci il percorso assoluto per il database
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_PATH = os.path.join(BASE_DIR, 'database.db')
+
+print(f"Database path: {DATABASE_PATH}")
+
 def init_db():
     """Inizializza il database con SQL diretto"""
-    conn = sqlite3.connect('database.db')
+    print(f"Inizializzando database in: {DATABASE_PATH}")
+    conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
     
     try:
@@ -53,6 +60,10 @@ def init_db():
             
         else:
             print("Tabelle esistenti trovate.")
+            # Debug: mostra quanti utenti ci sono
+            cursor.execute("SELECT COUNT(*) FROM UTENTE")
+            user_count = cursor.fetchone()[0]
+            print(f"Utenti esistenti nel database: {user_count}")
         
     except sqlite3.Error as e:
         print(f"ERRORE SQLite: {e}")
@@ -62,9 +73,36 @@ def init_db():
         conn.close()
 
 def get_db_connection():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row  # Per accedere alle colonne per nome
     return conn
+
+def debug_database():
+    """Funzione per debug del database"""
+    if os.path.exists(DATABASE_PATH):
+        print(f"File database esistente: {DATABASE_PATH}")
+        print(f"Dimensione file: {os.path.getsize(DATABASE_PATH)} bytes")
+        
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT COUNT(*) FROM UTENTE")
+        user_count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM NOTIFICA")
+        notifica_count = cursor.fetchone()[0]
+        
+        print(f"Utenti nel database: {user_count}")
+        print(f"Notifiche nel database: {notifica_count}")
+        
+        # Mostra tutti gli username
+        cursor.execute("SELECT username FROM UTENTE")
+        users = cursor.fetchall()
+        print(f"Utenti registrati: {[user[0] for user in users]}")
+        
+        conn.close()
+    else:
+        print(f"File database NON trovato in: {DATABASE_PATH}")
 
 app = Flask(__name__)
 app.secret_key = 'supersegretissima'
@@ -72,6 +110,7 @@ app.secret_key = 'supersegretissima'
 # Inizializza il database all'avvio
 print("Verificando/creando il database...")
 init_db()
+debug_database()
 print("Database pronto!")
 
 @app.route('/')
@@ -112,8 +151,10 @@ def login():
         if user and check_password_hash(user['password'], password):
             session['user'] = user['username']
             session['email'] = user['email']  # Aggiungi email alla sessione
+            print(f"Login riuscito per utente: {username}")
             return redirect('/trade_input')
         else:
+            print(f"Login fallito per utente: {username}")
             return "Username o password errati"
 
     return render_template('login.html')
@@ -135,13 +176,15 @@ def register():
             c.execute("INSERT INTO UTENTE (username, email, password) VALUES (?, ?, ?)", 
                       (username, email, password))
             conn.commit()
+            print(f"Utente registrato: {username}")
             
             # Dopo la registrazione, imposta la sessione
             session['user'] = username
             session['email'] = email
             
-        except sqlite3.IntegrityError:
+        except sqlite3.IntegrityError as e:
             conn.close()
+            print(f"Errore registrazione: {e}")
             return "Username o email già usati"
         finally:
             conn.close()
@@ -187,8 +230,10 @@ def trade_input():
                 account_size, fraction_invested, notes, asset_type
             ))
             conn.commit()
+            print(f"Trade salvato per utente: {username}")
         except sqlite3.IntegrityError as e:
             conn.close()
+            print(f"Errore salvataggio trade: {e}")
             return f'Error in saving: {e}'
         finally:
             conn.close()
@@ -216,6 +261,12 @@ def view_notifications():
     conn.close()
     
     return render_template('notifications.html', notifications=notifications)
+
+# Route per debug del database
+@app.route('/debug_db')
+def debug_db():
+    debug_database()
+    return "Check console for database info"
 
 if __name__ == '__main__':
     app.run(debug=True)
