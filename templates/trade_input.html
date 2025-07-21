@@ -46,6 +46,7 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 14px;
+      box-sizing: border-box;
     }
 
     textarea {
@@ -71,6 +72,7 @@
 
     .copy-button {
       background-color: #6c757d;
+      margin-top: 10px;
     }
 
     .copy-button:hover {
@@ -83,6 +85,15 @@
 
     .add-button:hover {
       background-color: #218838;
+    }
+
+    .remove-button {
+      background-color: #dc3545;
+      margin-top: 10px;
+    }
+
+    .remove-button:hover {
+      background-color: #c82333;
     }
 
     .confirmation {
@@ -106,6 +117,33 @@
       background-color: #f0f0f0;
     }
 
+    .user-info {
+      text-align: right;
+      margin-bottom: 20px;
+      color: #666;
+    }
+
+    .user-info a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .user-info a:hover {
+      text-decoration: underline;
+    }
+
+    .trade-block {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background-color: #fafafa;
+    }
+
+    .trade-block:first-child {
+      background-color: white;
+    }
+
     @media (max-width: 600px) {
       .container {
         padding: 20px;
@@ -119,13 +157,19 @@
 </head>
 <body>
   <div class="container">
-    <h2>Insert Trade(s)</h2>
+    <div class="user-info">
+      {% if session.user %}
+        Welcome, {{ session.user }}! | <a href="/view_notifications">View Trades</a> | <a href="/logout">Logout</a>
+      {% endif %}
+    </div>
+
+    <h2>🧠 Insert Trade(s) for Analysis</h2>
 
     <div class="dropzone" id="dropzone">
       📄 Drag and drop a JSON file here to load test trades
     </div>
 
-    <form id="trade-form">
+    <form id="trade-form" method="POST" action="/trade_input">
       <div class="trade-block">
         <h3>Trade Details</h3>
 
@@ -147,25 +191,25 @@
         <input type="number" step="0.01" min="0" name="account_size[]" placeholder="e.g., 5000.00" required>
 
         <label>Fraction Invested *</label>
-        <input type="number" step="0.01" min="0" max="1" name="fraction_invested[]" placeholder="e.g., 0.25" required>
+        <input type="number" step="0.01" min="0" max="1" name="fraction_invested[]" placeholder="e.g., 0.25 (25% of account)" required>
 
         <h3>Sentiment</h3>
 
         <label>Notes / Sentiment *</label>
-        <textarea name="notes[]" placeholder="Why did you enter this trade? What were you feeling?" required></textarea>
+        <textarea name="notes[]" placeholder="Why did you enter this trade? What were you feeling? Be detailed - this helps analyze your trading psychology." required></textarea>
 
         <label>Asset Type (Optional)</label>
         <select name="asset_type[]">
           <option value="">-- Select --</option>
-          <option value="stock">Stock</option>
-          <option value="etf">ETF</option>
-          <option value="crypto">Crypto</option>
-          <option value="forex">Forex</option>
+          <option value="Stock">Stock</option>
+          <option value="ETF">ETF</option>
+          <option value="Crypto">Crypto</option>
+          <option value="Forex">Forex</option>
         </select>
       </div>
 
       <button type="button" class="add-button" onclick="addTradeBlock()">+ Add Another Trade</button>
-      <button type="submit">Submit Trades</button>
+      <button type="submit">📊 Analyze My Trades</button>
     </form>
 
     <div id="confirmation" class="confirmation" style="display: none;">
@@ -200,7 +244,7 @@
         }
       });
 
-      // Add copy button if not present
+      // Add copy and remove buttons if not present
       if (!newBlock.querySelector('.copy-button')) {
         const copyBtn = document.createElement('button');
         copyBtn.type = 'button';
@@ -208,6 +252,13 @@
         copyBtn.innerText = 'Copy Previous Trade';
         copyBtn.onclick = () => copyPreviousTrade(newBlock);
         newBlock.appendChild(copyBtn);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-button';
+        removeBtn.innerText = 'Remove This Trade';
+        removeBtn.onclick = () => removeTradeBlock(newBlock);
+        newBlock.appendChild(removeBtn);
       }
 
       document.getElementById('trade-form').insertBefore(newBlock, document.querySelector('.add-button'));
@@ -222,64 +273,20 @@
       const currInputs = currentBlock.querySelectorAll('input, textarea, select');
 
       prevInputs.forEach((input, i) => {
-        currInputs[i].value = input.value;
+        if (currInputs[i]) {
+          currInputs[i].value = input.value;
+        }
       });
     }
 
-    document.getElementById('trade-form').addEventListener('submit', function (e) {
-      e.preventDefault();
-      document.getElementById('confirmation').style.display = 'block';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-
-    // --- Drag and Drop for JSON File ---
-    const dropzone = document.getElementById('dropzone');
-    dropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropzone.style.backgroundColor = '#e0e0e0';
-    });
-
-    dropzone.addEventListener('dragleave', () => {
-      dropzone.style.backgroundColor = '';
-    });
-
-    dropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropzone.style.backgroundColor = '';
-      const file = e.dataTransfer.files[0];
-      if (!file || !file.name.endsWith('.json')) {
-        alert('Please drop a valid .json file');
+    function removeTradeBlock(blockToRemove) {
+      const blocks = document.querySelectorAll('.trade-block');
+      if (blocks.length <= 1) {
+        alert('You must have at least one trade to analyze.');
         return;
       }
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const trades = JSON.parse(event.target.result);
-          trades.forEach((trade, i) => {
-            if (i === 0) {
-              // Fill the first trade block
-              fillBlock(document.querySelector('.trade-block'), trade);
-            } else {
-              addTradeBlock(trade);
-            }
-          });
-        } catch (err) {
-          alert('Invalid JSON file');
-        }
-      };
-      reader.readAsText(file);
-    });
-
-    function fillBlock(block, data) {
-      const inputs = block.querySelectorAll('input, textarea, select');
-      inputs.forEach((input) => {
-        const name = input.name.replace("[]", "");
-        if (data[name] !== undefined) {
-          input.value = data[name];
-        }
-      });
+      blockToRemove.remove();
     }
-  </script>
-</body>
-</html>
+
+    // Form validation
+    document.getElementById('trade-form').addEventListener('
