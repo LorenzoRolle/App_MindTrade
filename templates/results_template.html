@@ -3,83 +3,244 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MindTrade - Bias Analysis Result</title>
+  <title>MindTrade - Your Trading Psychology Analysis</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .bias-card { transition: all 0.3s ease; }
+    .bias-card:hover { transform: translateY(-2px); }
+    .score-ring {
+      background: conic-gradient(from 0deg, #ef4444 0deg, #ef4444 var(--score-deg), #e5e7eb var(--score-deg), #e5e7eb 360deg);
+    }
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-800 min-h-screen">
 
-  <div class="max-w-xl mx-auto p-6 mt-10 bg-white rounded-2xl shadow-xl">
-    <h1 class="text-3xl font-bold text-center mb-6">🧠 Your Trading Analysis</h1>
-
-    <!-- Bias Scores -->
-    <div class="space-y-4">
-      <div class="bg-blue-100 p-4 rounded-xl shadow-sm">
-        <h2 class="text-xl font-semibold">📉 Overconfidence Score:</h2>
-        <p class="text-2xl font-bold text-blue-700">{{ results.overconfidence_score }}%</p>
+  <div class="max-w-6xl mx-auto p-6 py-10">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-bold mb-2">🧠 Your Trading Psychology Report</h1>
+      <p class="text-gray-600">Analysis based on {{ total_trades or 0 }} trade(s)</p>
+      
+      {% if session.user %}
+      <div class="mt-4 text-sm text-gray-500">
+        Welcome back, {{ session.user }}! | 
+        <a href="/trade_input" class="text-blue-600 hover:underline">Add New Trade</a> | 
+        <a href="/view_notifications" class="text-blue-600 hover:underline">View All Trades</a> | 
+        <a href="/logout" class="text-blue-600 hover:underline">Logout</a>
       </div>
+      {% endif %}
+    </div>
 
-      <div class="bg-yellow-100 p-4 rounded-xl shadow-sm">
-        <h2 class="text-xl font-semibold">😟 Loss Aversion Score:</h2>
-        <p class="text-2xl font-bold text-yellow-700">{{ results.loss_aversion_score }}%</p>
+    {% if message %}
+    <!-- No Data Message -->
+    <div class="max-w-md mx-auto">
+      <div class="bg-white rounded-2xl shadow-lg p-8 text-center">
+        <div class="text-6xl mb-4">📊</div>
+        <h3 class="text-xl font-semibold mb-4">{{ message }}</h3>
+        <a href="/trade_input" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition">
+          Enter Your First Trade
+        </a>
       </div>
     </div>
 
-    <!-- Feedback Message -->
-    <div class="mt-6 bg-gray-50 border-l-4 border-gray-400 p-4 rounded-md">
-      <p class="text-gray-700 italic">{{ results.message }}</p>
-    </div>
-
-    <!-- Suggestions -->
-    <div class="mt-6">
-      <h3 class="font-semibold mb-2">📘 Suggested Micro-Lesson:</h3>
-      <a href="/micro-lessons/{{ results.suggested_lesson }}" class="text-blue-600 hover:underline">
-        {% if results.suggested_lesson == 'overconfidence' %}
-          Understanding Overconfidence in Trading →
-        {% else %}
-          Managing Loss Aversion in Trading →
-        {% endif %}
-      </a>
-    </div>
-
-    <!-- Score Interpretation -->
-    <div class="mt-6 bg-indigo-50 p-4 rounded-xl">
-      <h3 class="font-semibold mb-2 text-indigo-800">📊 Score Interpretation:</h3>
-      <div class="text-sm text-indigo-700 space-y-1">
-        {% if results.overconfidence_score > 70 %}
-          <p>• <strong>High Overconfidence:</strong> Consider reducing position sizes and implementing stricter risk management.</p>
-        {% elif results.overconfidence_score > 40 %}
-          <p>• <strong>Moderate Overconfidence:</strong> Be mindful of your position sizing and market sentiment.</p>
-        {% else %}
-          <p>• <strong>Low Overconfidence:</strong> Good risk management practices observed.</p>
-        {% endif %}
+    {% elif bias_results %}
+    
+    <!-- Overall Summary -->
+    <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+      <div class="text-center">
+        <h2 class="text-2xl font-bold mb-4">📈 Overall Psychological Profile</h2>
         
-        {% if results.loss_aversion_score > 60 %}
-          <p>• <strong>High Loss Aversion:</strong> You may be holding losing positions too long. Consider setting stop losses.</p>
-        {% elif results.loss_aversion_score > 30 %}
-          <p>• <strong>Moderate Loss Aversion:</strong> Monitor your exit timing for losing trades.</p>
-        {% else %}
-          <p>• <strong>Low Loss Aversion:</strong> Balanced approach to winning and losing trades.</p>
-        {% endif %}
+        <!-- Overall Confidence Score -->
+        <div class="inline-flex items-center justify-center w-32 h-32 rounded-full mb-4" 
+             style="background: conic-gradient(from 0deg, 
+               {% if bias_results.overall_confidence >= 0.7 %}#ef4444 0deg, #ef4444 {{ bias_results.overall_confidence * 360 }}deg{% elif bias_results.overall_confidence >= 0.4 %}#f59e0b 0deg, #f59e0b {{ bias_results.overall_confidence * 360 }}deg{% else %}#10b981 0deg, #10b981 {{ bias_results.overall_confidence * 360 }}deg{% endif %}, 
+               #e5e7eb {{ bias_results.overall_confidence * 360 }}deg, #e5e7eb 360deg)">
+          <div class="bg-white w-24 h-24 rounded-full flex items-center justify-center">
+            <span class="text-2xl font-bold">{{ "%.0f" | format(bias_results.overall_confidence * 100) }}%</span>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <div class="text-2xl font-bold text-gray-700">{{ total_trades }}</div>
+            <div class="text-sm text-gray-500">Total Trades</div>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <div class="text-2xl font-bold {% if bias_results.detected_biases|length > 0 %}text-yellow-600{% else %}text-green-600{% endif %}">
+              {{ bias_results.detected_biases|length }}
+            </div>
+            <div class="text-sm text-gray-500">Biases Detected</div>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <div class="text-2xl font-bold {% if bias_results.overall_confidence >= 0.7 %}text-red-600{% elif bias_results.overall_confidence >= 0.4 %}text-yellow-600{% else %}text-green-600{% endif %}">
+              {% if bias_results.overall_confidence >= 0.7 %}High{% elif bias_results.overall_confidence >= 0.4 %}Medium{% else %}Low{% endif %}
+            </div>
+            <div class="text-sm text-gray-500">Risk Level</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="mt-8 flex space-x-4">
-      <a href="/trade_input" class="flex-1 bg-blue-600 text-white text-center px-6 py-3 rounded-full hover:bg-blue-700 transition">
-        Enter Another Trade
+    <!-- Detected Biases Alert -->
+    {% if bias_results.detected_biases %}
+    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-8 rounded-r-lg">
+      <h3 class="text-lg font-semibold text-yellow-800 mb-2">⚠️ Behavioral Patterns Detected</h3>
+      <div class="flex flex-wrap gap-2">
+        {% for bias in bias_results.detected_biases %}
+        <span class="bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">{{ bias }}</span>
+        {% endfor %}
+      </div>
+      <p class="text-yellow-700 mt-2 text-sm">These patterns may be affecting your trading performance. Review the detailed analysis below.</p>
+    </div>
+    {% endif %}
+
+    <!-- Individual Bias Analysis -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      
+      {% for bias_name, bias_data in bias_results.details.items() %}
+      <div class="bias-card bg-white rounded-xl shadow-lg p-6 {% if bias_data.bias_detected %}border-l-4 border-yellow-400{% else %}border-l-4 border-green-400{% endif %}">
+        
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <h3 class="text-lg font-bold flex items-center gap-2">
+              {% if bias_name == 'Overconfidence' %}🎯
+              {% elif bias_name == 'Loss Aversion' %}😰
+              {% elif bias_name == 'Confirmation Bias' %}🔍
+              {% elif bias_name == 'FOMO' %}🚀
+              {% elif bias_name == 'Recency Bias' %}⏰
+              {% elif bias_name == 'Revenge Trading' %}😡
+              {% elif bias_name == 'Herd Behavior' %}🐑
+              {% else %}📈{% endif %}
+              {{ bias_name }}
+            </h3>
+            <div class="{% if bias_data.bias_detected %}text-yellow-600{% else %}text-green-600{% endif %} font-medium text-sm">
+              {% if bias_data.bias_detected %}⚠️ Detected{% else %}✅ Not Detected{% endif %}
+            </div>
+          </div>
+          
+          <!-- Score Circle -->
+          <div class="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold" 
+               style="background: conic-gradient(from 0deg, 
+                 {% if bias_data.confidence_score >= 0.7 %}#ef4444 0deg, #ef4444 {{ bias_data.confidence_score * 360 }}deg{% elif bias_data.confidence_score >= 0.4 %}#f59e0b 0deg, #f59e0b {{ bias_data.confidence_score * 360 }}deg{% else %}#10b981 0deg, #10b981 {{ bias_data.confidence_score * 360 }}deg{% endif %}, 
+                 #e5e7eb {{ bias_data.confidence_score * 360 }}deg, #e5e7eb 360deg)">
+            <div class="bg-white w-12 h-12 rounded-full flex items-center justify-center">
+              <span class="text-black text-sm font-bold">{{ "%.0f" | format(bias_data.confidence_score * 100) }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-gray-600 text-sm leading-relaxed">
+          {{ bias_data.explanation }}
+        </div>
+
+        <!-- Recommendations -->
+        <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+          <h4 class="font-semibold text-sm text-gray-700 mb-1">💡 Recommendation:</h4>
+          <p class="text-xs text-gray-600">
+            {% if bias_name == 'Overconfidence' and bias_data.bias_detected %}
+              Consider reducing position sizes and implementing stricter risk management rules.
+            {% elif bias_name == 'Loss Aversion' and bias_data.bias_detected %}
+              Set clear stop-losses before entering trades and stick to them.
+            {% elif bias_name == 'FOMO' and bias_data.bias_detected %}
+              Wait for proper setups instead of chasing price movements.
+            {% elif bias_name == 'Revenge Trading' and bias_data.bias_detected %}
+              Take breaks after losses and avoid increasing position sizes when emotional.
+            {% elif bias_name == 'Recency Bias' and bias_data.bias_detected %}
+              Maintain a trading journal and review long-term performance patterns.
+            {% elif bias_name == 'Confirmation Bias' and bias_data.bias_detected %}
+              Actively seek out opposing viewpoints before making trading decisions.
+            {% elif bias_name == 'Herd Behavior' and bias_data.bias_detected %}
+              Focus on your own analysis rather than following crowd sentiment.
+            {% else %}
+              Continue maintaining disciplined trading practices.
+            {% endif %}
+          </p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Action Items -->
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <h2 class="text-2xl font-bold mb-6 text-center">📋 Next Steps</h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-4">
+          <h3 class="font-semibold text-lg">🎯 Immediate Actions:</h3>
+          <ul class="space-y-2 text-sm text-gray-600">
+            {% if bias_results.detected_biases %}
+            <li class="flex items-start gap-2">
+              <span class="text-yellow-500 mt-0.5">•</span>
+              <span>Review your trading rules and consider tightening risk management</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-yellow-500 mt-0.5">•</span>
+              <span>Keep a detailed trading journal focusing on emotions and decision-making</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-yellow-500 mt-0.5">•</span>
+              <span>Consider reducing position sizes until emotional patterns improve</span>
+            </li>
+            {% else %}
+            <li class="flex items-start gap-2">
+              <span class="text-green-500 mt-0.5">•</span>
+              <span>Continue your disciplined trading approach</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-green-500 mt-0.5">•</span>
+              <span>Maintain detailed records to track psychological patterns</span>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+        
+        <div class="space-y-4">
+          <h3 class="font-semibold text-lg">📚 Long-term Development:</h3>
+          <ul class="space-y-2 text-sm text-gray-600">
+            <li class="flex items-start gap-2">
+              <span class="text-blue-500 mt-0.5">•</span>
+              <span>Study behavioral finance and trading psychology</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-blue-500 mt-0.5">•</span>
+              <span>Practice mindfulness and emotional regulation techniques</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-blue-500 mt-0.5">•</span>
+              <span>Regularly review and update your trading plan</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="text-center mt-8 space-x-4">
+      <a href="/trade_input" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-full hover:bg-blue-700 transition shadow-lg">
+        📝 Add Another Trade
       </a>
-      <a href="/view_notifications" class="flex-1 bg-gray-600 text-white text-center px-6 py-3 rounded-full hover:bg-gray-700 transition">
-        View All Trades
+      <a href="/view_notifications" class="inline-block bg-gray-600 text-white px-8 py-3 rounded-full hover:bg-gray-700 transition shadow-lg">
+        📋 View All Trades
       </a>
     </div>
 
-    <!-- Logout Button -->
-    <div class="mt-4 text-center">
-      <a href="/logout" class="text-gray-500 hover:text-gray-700 text-sm">
-        Logout
-      </a>
-    </div>
+    {% endif %}
   </div>
 
+  <script>
+    // Auto-refresh analysis data periodically
+    setInterval(function() {
+      // Only refresh if user is active (to save resources)
+      if (document.hasFocus()) {
+        fetch('/api/bias_analysis')
+          .then(response => response.json())
+          .then(data => {
+            console.log('Analysis data updated:', data);
+            // You could update the page dynamically here
+          })
+          .catch(error => console.log('Refresh error:', error));
+      }
+    }, 60000); // Every minute
+  </script>
 </body>
 </html>

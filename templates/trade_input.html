@@ -70,53 +70,6 @@
       background-color: #0056b3;
     }
 
-    .copy-button {
-      background-color: #6c757d;
-      margin-top: 10px;
-    }
-
-    .copy-button:hover {
-      background-color: #5a6268;
-    }
-
-    .add-button {
-      background-color: #28a745;
-    }
-
-    .add-button:hover {
-      background-color: #218838;
-    }
-
-    .remove-button {
-      background-color: #dc3545;
-      margin-top: 10px;
-    }
-
-    .remove-button:hover {
-      background-color: #c82333;
-    }
-
-    .confirmation {
-      margin-top: 20px;
-      color: green;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    .dropzone {
-      border: 2px dashed #aaa;
-      border-radius: 8px;
-      padding: 20px;
-      text-align: center;
-      color: #666;
-      margin-bottom: 25px;
-      cursor: pointer;
-    }
-
-    .dropzone:hover {
-      background-color: #f0f0f0;
-    }
-
     .user-info {
       text-align: right;
       margin-bottom: 20px;
@@ -132,16 +85,22 @@
       text-decoration: underline;
     }
 
-    .trade-block {
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 20px;
-      background-color: #fafafa;
+    .pnl-preview {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 5px;
+      font-weight: bold;
+      text-align: center;
     }
 
-    .trade-block:first-child {
-      background-color: white;
+    .profit { background-color: #d4edda; color: #155724; }
+    .loss { background-color: #f8d7da; color: #721c24; }
+
+    .hint {
+      font-size: 12px;
+      color: #666;
+      font-style: italic;
+      margin-top: 5px;
     }
 
     @media (max-width: 600px) {
@@ -159,134 +118,123 @@
   <div class="container">
     <div class="user-info">
       {% if session.user %}
-        Welcome, {{ session.user }}! | <a href="/view_notifications">View Trades</a> | <a href="/logout">Logout</a>
+        Welcome, {{ session.user }}! | <a href="/view_notifications">View Trades</a> | <a href="/bias_analysis">🧠 My Analysis</a> | <a href="/logout">Logout</a>
       {% endif %}
     </div>
 
-    <h2>🧠 Insert Trade(s) for Analysis</h2>
+    <h2>🧠 Insert Trade for Analysis</h2>
 
-    <div class="dropzone" id="dropzone">
-      📄 Drag and drop a JSON file here to load test trades
-    </div>
+    <form method="POST" action="/trade_input">
+      <h3>📊 Trade Details</h3>
 
-    <form id="trade-form" method="POST" action="/trade_input">
-      <div class="trade-block">
-        <h3>Trade Details</h3>
+      <label>Asset Name *</label>
+      <input type="text" name="asset_name" placeholder="e.g., AAPL, Bitcoin, EUR/USD" required>
+      
+      <label>Asset Type</label>
+      <select name="asset_type">
+        <option value="">-- Select --</option>
+        <option value="Stock">Stock</option>
+        <option value="ETF">ETF</option>
+        <option value="Crypto">Crypto</option>
+        <option value="Forex">Forex</option>
+      </select>
 
-        <label>Entry Price *</label>
-        <input type="number" step="0.01" min="0" name="entry_price[]" placeholder="e.g., 105.50" required>
+      <label>Entry Price *</label>
+      <input type="number" step="0.0001" min="0" name="entry_price" placeholder="e.g., 105.50" required onchange="calculatePnL()">
 
-        <label>Exit Price *</label>
-        <input type="number" step="0.01" min="0" name="exit_price[]" placeholder="e.g., 110.00" required>
+      <label>Exit Price *</label>
+      <input type="number" step="0.0001" min="0" name="exit_price" placeholder="e.g., 110.00" required onchange="calculatePnL()">
 
-        <label>Entry Timestamp *</label>
-        <input type="datetime-local" name="entry_time[]" required>
+      <label>Entry Timestamp *</label>
+      <input type="datetime-local" name="entry_timestamp" required>
 
-        <label>Exit Timestamp *</label>
-        <input type="datetime-local" name="exit_time[]" required>
+      <label>Exit Timestamp *</label>
+      <input type="datetime-local" name="exit_timestamp" required>
 
-        <h3>Risk Sizing</h3>
+      <h3>💰 Risk Sizing</h3>
 
-        <label>Account Size *</label>
-        <input type="number" step="0.01" min="0" name="account_size[]" placeholder="e.g., 5000.00" required>
+      <label>Account Size *</label>
+      <input type="number" step="0.01" min="0" name="account_size" placeholder="e.g., 5000.00" required onchange="calculatePnL()">
 
-        <label>Fraction Invested *</label>
-        <input type="number" step="0.01" min="0" max="1" name="fraction_invested[]" placeholder="e.g., 0.25 (25% of account)" required>
+      <label>Fraction Invested *</label>
+      <input type="number" step="0.0001" min="0" max="1" name="fraction_invested" placeholder="e.g., 0.25 (25% of account)" required onchange="calculatePnL()">
+      <div class="hint">Enter as decimal: 0.1 = 10%, 0.25 = 25%, etc.</div>
 
-        <h3>Sentiment</h3>
+      <div id="pnl-preview" class="pnl-preview" style="display: none;"></div>
 
-        <label>Notes / Sentiment *</label>
-        <textarea name="notes[]" placeholder="Why did you enter this trade? What were you feeling? Be detailed - this helps analyze your trading psychology." required></textarea>
+      <h3>🧭 Strategy & Psychology</h3>
 
-        <label>Asset Type (Optional)</label>
-        <select name="asset_type[]">
-          <option value="">-- Select --</option>
-          <option value="Stock">Stock</option>
-          <option value="ETF">ETF</option>
-          <option value="Crypto">Crypto</option>
-          <option value="Forex">Forex</option>
-        </select>
+      <label>Trade Reason</label>
+      <select name="trade_reason">
+        <option value="">-- Select --</option>
+        <option value="technical_analysis">Technical Analysis</option>
+        <option value="fundamental_analysis">Fundamental Analysis</option>
+        <option value="news_based">News Based</option>
+        <option value="trend_following">Trend Following</option>
+        <option value="breakout">Breakout</option>
+        <option value="fomo">FOMO</option>
+        <option value="chasing">Chasing</option>
+        <option value="revenge">Revenge Trading</option>
+        <option value="scalping">Scalping</option>
+        <option value="swing">Swing Trading</option>
+        <option value="other">Other</option>
+      </select>
+
+      <label>Notes / Trading Psychology *</label>
+      <textarea name="notes" placeholder="Be honest about your emotions and thought process:
+- Why did you enter this trade?
+- What were you feeling (confident, fearful, excited, angry)?
+- Any external influences (social media, news, friends)?
+- Did you follow your strategy or deviate from it?
+
+The more detailed you are, the better the psychological analysis will be." required></textarea>
+      
+      <div class="hint">
+        💡 <strong>Examples of useful notes:</strong><br>
+        • "Saw everyone talking about this on Twitter, had to get in"<br>
+        • "Was angry about previous loss, wanted to make it back quickly"<br>
+        • "Breakout looked perfect, felt very confident"<br>
+        • "Should have entered earlier, jumped in late"
       </div>
 
-      <button type="button" class="add-button" onclick="addTradeBlock()">+ Add Another Trade</button>
-      <button type="submit">📊 Analyze My Trades</button>
+      <button type="submit">📊 Save Trade & Analyze My Patterns</button>
     </form>
-
-    <div id="confirmation" class="confirmation" style="display: none;">
-      ✅ Trade(s) submitted successfully!
-    </div>
   </div>
 
   <script>
-    const MAX_TRADES = 10;
-
-    function addTradeBlock(prefill = null) {
-      const blocks = document.querySelectorAll('.trade-block');
-      if (blocks.length >= MAX_TRADES) {
-        alert(`You can only input up to ${MAX_TRADES} trades.`);
-        return;
+    function calculatePnL() {
+      const entryPrice = parseFloat(document.querySelector('input[name="entry_price"]').value) || 0;
+      const exitPrice = parseFloat(document.querySelector('input[name="exit_price"]').value) || 0;
+      const accountSize = parseFloat(document.querySelector('input[name="account_size"]').value) || 0;
+      const fractionInvested = parseFloat(document.querySelector('input[name="fraction_invested"]').value) || 0;
+      
+      const preview = document.getElementById('pnl-preview');
+      
+      if (entryPrice > 0 && exitPrice > 0 && accountSize > 0 && fractionInvested > 0) {
+        const positionSize = accountSize * fractionInvested;
+        const shares = positionSize / entryPrice;
+        const pnl = shares * (exitPrice - entryPrice);
+        const pnlPercentage = ((exitPrice - entryPrice) / entryPrice) * 100;
+        
+        preview.style.display = 'block';
+        preview.textContent = `Expected P&L: €${pnl.toFixed(2)} (${pnlPercentage.toFixed(2)}%)`;
+        preview.className = pnl >= 0 ? 'pnl-preview profit' : 'pnl-preview loss';
+      } else {
+        preview.style.display = 'none';
       }
-
-      const lastBlock = blocks[blocks.length - 1];
-      const newBlock = lastBlock.cloneNode(true);
-
-      // Clear inputs unless prefill is given
-      const inputs = newBlock.querySelectorAll('input, textarea, select');
-      inputs.forEach((input) => {
-        if (prefill) {
-          const name = input.name.replace("[]", "");
-          if (prefill[name] !== undefined) {
-            input.value = prefill[name];
-          }
-        } else {
-          input.value = '';
-          if (input.tagName === 'SELECT') input.selectedIndex = 0;
-        }
-      });
-
-      // Add copy and remove buttons if not present
-      if (!newBlock.querySelector('.copy-button')) {
-        const copyBtn = document.createElement('button');
-        copyBtn.type = 'button';
-        copyBtn.className = 'copy-button';
-        copyBtn.innerText = 'Copy Previous Trade';
-        copyBtn.onclick = () => copyPreviousTrade(newBlock);
-        newBlock.appendChild(copyBtn);
-
-        const removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'remove-button';
-        removeBtn.innerText = 'Remove This Trade';
-        removeBtn.onclick = () => removeTradeBlock(newBlock);
-        newBlock.appendChild(removeBtn);
-      }
-
-      document.getElementById('trade-form').insertBefore(newBlock, document.querySelector('.add-button'));
     }
 
-    function copyPreviousTrade(currentBlock) {
-      const blocks = Array.from(document.querySelectorAll('.trade-block'));
-      const index = blocks.indexOf(currentBlock);
-      if (index <= 0) return alert('No previous trade to copy.');
-
-      const prevInputs = blocks[index - 1].querySelectorAll('input, textarea, select');
-      const currInputs = currentBlock.querySelectorAll('input, textarea, select');
-
-      prevInputs.forEach((input, i) => {
-        if (currInputs[i]) {
-          currInputs[i].value = input.value;
-        }
-      });
-    }
-
-    function removeTradeBlock(blockToRemove) {
-      const blocks = document.querySelectorAll('.trade-block');
-      if (blocks.length <= 1) {
-        alert('You must have at least one trade to analyze.');
-        return;
-      }
-      blockToRemove.remove();
-    }
-
-    // Form validation
-    document.getElementById('trade-form').addEventListener('
+    // Set current time as default for exit timestamp
+    document.addEventListener('DOMContentLoaded', function() {
+      const now = new Date();
+      const localISOTime = now.getFullYear() + '-' + 
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + 'T' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0');
+      
+      document.querySelector('input[name="exit_timestamp"]').value = localISOTime;
+    });
+  </script>
+</body>
+</html>

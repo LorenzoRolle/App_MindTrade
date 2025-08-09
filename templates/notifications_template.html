@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindTrade - My Trading History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">📊 My Trading History</h1>
+                    <p class="text-gray-600 mt-1">{{ notifications|length }} trade(s) recorded</p>
+                </div>
+                <div class="mt-4 md:mt-0 space-x-3">
+                    <a href="/trade_input" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        📝 Add New Trade
+                    </a>
+                    {% if show_analysis_link %}
+                    <a href="/bias_analysis" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                        🧠 View Analysis
+                    </a>
+                    {% endif %}
+                    <a href="/logout" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                        🚪 Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% if notifications %}
+        <!-- Summary Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            {% set total_trades = notifications|length %}
+            {% set profitable_trades = notifications|selectattr('exit_price', '>', 'entry_price')|list|length %}
+            {% set loss_trades = total_trades - profitable_trades %}
+            
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="text-2xl font-bold text-gray-900">{{ total_trades }}</div>
+                <div class="text-gray-600 text-sm">Total Trades</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="text-2xl font-bold text-green-600">{{ profitable_trades }}</div>
+                <div class="text-gray-600 text-sm">Winning Trades</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="text-2xl font-bold text-red-600">{{ loss_trades }}</div>
+                <div class="text-gray-600 text-sm">Losing Trades</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <div class="text-2xl font-bold text-blue-600">
+                    {% if total_trades > 0 %}{{ "%.1f" | format((profitable_trades / total_trades) * 100) }}%{% else %}0%{% endif %}
+                </div>
+                <div class="text-gray-600 text-sm">Win Rate</div>
+            </div>
+        </div>
+
+        <!-- Trade List -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold">Trade Details</h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asset</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entry/Exit</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Range</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">P&L</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for trade in notifications %}
+                        {% set pnl = (trade.exit_price - trade.entry_price) * (trade.account_size * trade.fraction_invested / trade.entry_price) %}
+                        {% set pnl_percentage = ((trade.exit_price - trade.entry_price) / trade.entry_price) * 100 %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">
+                                            {{ trade.asset_name or 'Unknown Asset' }}
+                                        </div>
+                                        <div class="text-sm text-gray-500">{{ trade.asset_type }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">
+                                    Entry: €{{ "%.4f" | format(trade.entry_price) }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    Exit: €{{ "%.4f" | format(trade.exit_price) }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">
+                                    {{ trade.entry_timestamp[:16].replace('T', ' ') }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    {{ trade.exit_timestamp[:16].replace('T', ' ') }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">
+                                    €{{ "%.2f" | format(trade.account_size * trade.fraction_invested) }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    {{ "%.1f" | format(trade.fraction_invested * 100) }}% of €{{ "%.0f" | format(trade.account_size) }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium {% if pnl >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {% if pnl >= 0 %}+{% endif %}€{{ "%.2f" | format(pnl) }}
+                                </div>
+                                <div class="text-sm {% if pnl_percentage >= 0 %}text-green-500{% else %}text-red-500{% endif %}">
+                                    {% if pnl_percentage >= 0 %}+{% endif %}{{ "%.2f" | format(pnl_percentage) }}%
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900 max-w-xs truncate" title="{{ trade.notes }}">
+                                    {{ trade.notes[:50] }}{% if trade.notes and trade.notes|length > 50 %}...{% endif %}
+                                </div>
+                                {% if trade.trade_reason %}
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Reason: {{ trade.trade_reason.replace('_', ' ').title() }}
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-lg shadow-md p-12 text-center">
+            <div class="text-6xl mb-4">📈</div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Trades Yet</h3>
+            <p class="text-gray-600 mb-6">Start tracking your trades to get psychological insights.</p>
+            <a href="/trade_input" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                Add Your First Trade
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Quick Actions -->
+        <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <a href="/trade_input" class="block p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition">
+                    <div class="text-2xl mb-2">📝</div>
+                    <div class="font-medium">Add New Trade</div>
+                    <div class="text-sm text-gray-500">Record your latest trading activity</div>
+                </a>
+                
+                {% if notifications %}
+                <a href="/bias_analysis" class="block p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md transition">
+                    <div class="text-2xl mb-2">🧠</div>
+                    <div class="font-medium">Psychology Analysis</div>
+                    <div class="text-sm text-gray-500">Understand your behavioral patterns</div>
+                </a>
+                {% endif %}
+                
+                <a href="/api/bias_analysis" target="_blank" class="block p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:shadow-md transition">
+                    <div class="text-2xl mb-2">📊</div>
+                    <div class="font-medium">Export Data</div>
+                    <div class="text-sm text-gray-500">Download analysis as JSON</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactivity
+        document.querySelectorAll('tr[class*="hover:bg-gray-50"]').forEach(row => {
+            row.addEventListener('click', function() {
+                // You could expand the row to show full notes or add edit functionality
+                const notesCell = this.querySelector('td:last-child div');
+                const fullNotes = notesCell.getAttribute('title');
+                if (fullNotes && fullNotes.length > 50) {
+                    alert('Full Notes:\n\n' + fullNotes);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
