@@ -118,6 +118,7 @@
   <div class="container">
     <div class="user-info">
       {% if session.user %}
+        <a href="/home">🏠 Home</a> |
         Welcome, {{ session.user }}! | <a href="/view_notifications">View Trades</a> | <a href="/bias_analysis">🧠 My Analysis</a> | <a href="/logout">Logout</a>
       {% endif %}
     </div>
@@ -133,10 +134,10 @@
       <label>Asset Type</label>
       <select name="asset_type">
         <option value="">-- Select --</option>
-        <option value="Stock">Stock</option>
-        <option value="ETF">ETF</option>
-        <option value="Crypto">Crypto</option>
-        <option value="Forex">Forex</option>
+        <option value="stock">Stock</option>
+        <option value="etf">ETF</option>
+        <option value="crypto">Crypto</option>
+        <option value="forex">Forex</option>
       </select>
 
       <label>Entry Price *</label>
@@ -163,6 +164,14 @@
       <div id="pnl-preview" class="pnl-preview" style="display: none;"></div>
 
       <h3>🧭 Strategy & Psychology</h3>
+
+
+      <label>Direction *</label>
+      <select name="direction" required>
+        <option value="">-- Select --</option>
+        <option value="long">Long</option>
+        <option value="short">Short</option>
+      </select>
 
       <label>Trade Reason</label>
       <select name="trade_reason">

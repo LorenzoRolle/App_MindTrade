@@ -1,0 +1,50 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Trades - MindTrade</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+  <div class="max-w-5xl mx-auto p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">📋 My Trades</h1>
+      <a href="/home" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">🏠 Home</a>
+    </div>
+    {% if trades %}
+    <table class="w-full table-auto bg-white rounded shadow">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="px-4 py-2">Asset</th>
+          <th class="px-4 py-2">Type</th>
+          <th class="px-4 py-2">Direction</th>
+          <th class="px-4 py-2">Fraction Invested</th>
+          <th class="px-4 py-2">PnL</th>
+          <th class="px-4 py-2">Notes</th>
+          <th class="px-4 py-2">Entry</th>
+          <th class="px-4 py-2">Exit</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for trade in trades %}
+        <tr class="border-b">
+          <td class="px-4 py-2">{{ trade.asset_name }}</td>
+          <td class="px-4 py-2">{{ trade.asset_type }}</td>
+          <td class="px-4 py-2">{{ trade.direction }}</td>
+          <td class="px-4 py-2">{{ "%.2f"|format(trade.fraction_invested) }}</td>
+          <td class="px-4 py-2">{{ "%.2f"|format(trade.pnl) }}</td>
+          <td class="px-4 py-2">{{ trade.notes }}</td>
+          <td class="px-4 py-2">{{ trade.entry_time }}</td>
+          <td class="px-4 py-2">{{ trade.exit_time }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No trades found. <a href="/trade_input" class="text-blue-500 hover:underline">Add your first trade</a>.</p>
+    {% endif %}
+  </div>
+</body>
+</html>
