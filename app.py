@@ -190,7 +190,10 @@ def api_bias_analysis():
     bias_results = detect_all_biases(trades_data)
     return jsonify(bias_results)
 
+# Always ensure database tables exist at startup
+with app.app_context():
+    db.create_all()
+    print("✅ Database tables ensured.")
+
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
     app.run(host="0.0.0.0", port=5000, debug=True)
