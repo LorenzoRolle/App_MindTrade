@@ -104,7 +104,7 @@ def trade_input():
             entry_price = float(form.get("entry_price", 0) or 0)
             exit_price = float(form.get("exit_price", 0) or 0)
         except ValueError:
-            return render_template("trade_input_with_home.html", error="Please enter valid numeric values.")
+            return render_template("trade_input.html", error="Please enter valid numeric values.")
 
         entry_time = form.get("entry_timestamp")
         exit_time = form.get("exit_timestamp")
@@ -150,9 +150,9 @@ def trade_input():
         ]
 
         bias_results = detect_all_biases(trades_data)
-        return render_template("results_template_with_home.html", bias_results=bias_results, total_trades=len(trades_data))
+        return render_template("results_template.html", bias_results=bias_results, total_trades=len(trades_data))
 
-    return render_template("trade_input_with_home.html")
+    return render_template("trade_input.html")
 
 @app.route("/view_notifications")
 def view_notifications():
