@@ -103,6 +103,23 @@
       margin-top: 5px;
     }
 
+    .upload-zone {
+      border: 2px dashed #888;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      color: #aaa;
+      font-size: 16px;
+      transition: border-color 0.3s;
+      cursor: pointer;
+      margin-bottom: 15px;
+    }
+
+    .upload-zone.dragover {
+      border-color: #4cafef;
+      color: #4cafef;
+    }
+
     @media (max-width: 600px) {
       .container {
         padding: 20px;
@@ -125,7 +142,13 @@
 
     <h2>🧠 Insert Trade for Analysis</h2>
 
-    <form method="POST" action="/trade_input">
+    <!-- JSON Upload -->
+    <div id="uploadZone" class="upload-zone">
+      Drag & Drop JSON File Here or Click to Select
+    </div>
+    <input type="file" id="fileInput" accept=".json" style="display:none;">
+
+    <form method="POST" action="/trade_input" id="tradeForm">
       <h3>📊 Trade Details</h3>
 
       <label>Asset Name *</label>
@@ -165,7 +188,6 @@
 
       <h3>🧭 Strategy & Psychology</h3>
 
-
       <label>Direction *</label>
       <select name="direction" required>
         <option value="">-- Select --</option>
@@ -190,13 +212,7 @@
       </select>
 
       <label>Notes / Trading Psychology *</label>
-      <textarea name="notes" placeholder="Be honest about your emotions and thought process:
-- Why did you enter this trade?
-- What were you feeling (confident, fearful, excited, angry)?
-- Any external influences (social media, news, friends)?
-- Did you follow your strategy or deviate from it?
-
-The more detailed you are, the better the psychological analysis will be." required></textarea>
+      <textarea name="notes" placeholder="Be honest about your emotions and thought process..." required></textarea>
       
       <div class="hint">
         💡 <strong>Examples of useful notes:</strong><br>
@@ -210,40 +226,88 @@ The more detailed you are, the better the psychological analysis will be." requi
     </form>
   </div>
 
-  <script>
-    function calculatePnL() {
-      const entryPrice = parseFloat(document.querySelector('input[name="entry_price"]').value) || 0;
-      const exitPrice = parseFloat(document.querySelector('input[name="exit_price"]').value) || 0;
-      const accountSize = parseFloat(document.querySelector('input[name="account_size"]').value) || 0;
-      const fractionInvested = parseFloat(document.querySelector('input[name="fraction_invested"]').value) || 0;
-      
-      const preview = document.getElementById('pnl-preview');
-      
-      if (entryPrice > 0 && exitPrice > 0 && accountSize > 0 && fractionInvested > 0) {
-        const positionSize = accountSize * fractionInvested;
-        const shares = positionSize / entryPrice;
-        const pnl = shares * (exitPrice - entryPrice);
-        const pnlPercentage = ((exitPrice - entryPrice) / entryPrice) * 100;
-        
-        preview.style.display = 'block';
-        preview.textContent = `Expected P&L: €${pnl.toFixed(2)} (${pnlPercentage.toFixed(2)}%)`;
-        preview.className = pnl >= 0 ? 'pnl-preview profit' : 'pnl-preview loss';
-      } else {
-        preview.style.display = 'none';
-      }
-    }
+<script>
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const form = document.getElementById('tradeForm');
 
-    // Set current time as default for exit timestamp
-    document.addEventListener('DOMContentLoaded', function() {
-      const now = new Date();
-      const localISOTime = now.getFullYear() + '-' + 
-        String(now.getMonth() + 1).padStart(2, '0') + '-' +
-        String(now.getDate()).padStart(2, '0') + 'T' +
-        String(now.getHours()).padStart(2, '0') + ':' +
-        String(now.getMinutes()).padStart(2, '0');
-      
-      document.querySelector('input[name="exit_timestamp"]').value = localISOTime;
+uploadZone.addEventListener('click', () => fileInput.click());
+uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+});
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+function handleFile(file) {
+    if (!file || file.type !== "application/json") {
+        alert("Please upload a valid JSON file.");
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            populateForm(data);
+        } catch (err) {
+            alert("Invalid JSON format.");
+        }
+    };
+    reader.readAsText(file);
+}
+
+function populateForm(data) {
+    const fields = [
+        "asset_name", "asset_type", "entry_price", "exit_price",
+        "entry_timestamp", "exit_timestamp", "account_size",
+        "fraction_invested", "direction", "trade_reason", "notes"
+    ];
+    fields.forEach(field => {
+        if (data[field] !== undefined) {
+            const input = form.elements[field];
+            if (input) input.value = data[field];
+        }
     });
-  </script>
+}
+
+function calculatePnL() {
+  const entryPrice = parseFloat(document.querySelector('input[name="entry_price"]').value) || 0;
+  const exitPrice = parseFloat(document.querySelector('input[name="exit_price"]').value) || 0;
+  const accountSize = parseFloat(document.querySelector('input[name="account_size"]').value) || 0;
+  const fractionInvested = parseFloat(document.querySelector('input[name="fraction_invested"]').value) || 0;
+  
+  const preview = document.getElementById('pnl-preview');
+  
+  if (entryPrice > 0 && exitPrice > 0 && accountSize > 0 && fractionInvested > 0) {
+    const positionSize = accountSize * fractionInvested;
+    const shares = positionSize / entryPrice;
+    const pnl = shares * (exitPrice - entryPrice);
+    const pnlPercentage = ((exitPrice - entryPrice) / entryPrice) * 100;
+    
+    preview.style.display = 'block';
+    preview.textContent = `Expected P&L: €${pnl.toFixed(2)} (${pnlPercentage.toFixed(2)}%)`;
+    preview.className = pnl >= 0 ? 'pnl-preview profit' : 'pnl-preview loss';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+// Set default exit timestamp
+document.addEventListener('DOMContentLoaded', function() {
+  const now = new Date();
+  const localISOTime = now.getFullYear() + '-' + 
+    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+    String(now.getDate()).padStart(2, '0') + 'T' +
+    String(now.getHours()).padStart(2, '0') + ':' +
+    String(now.getMinutes()).padStart(2, '0');
+  
+  document.querySelector('input[name="exit_timestamp"]').value = localISOTime;
+});
+</script>
 </body>
 </html>

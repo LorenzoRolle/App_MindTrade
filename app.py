@@ -150,7 +150,7 @@ def trade_input():
         ]
 
         bias_results = detect_all_biases(trades_data)
-        return render_template("results_template.html", bias_results=bias_results, total_trades=len(trades_data))
+        return render_template("results.html", bias_results=bias_results, total_trades=len(trades_data))
 
     return render_template("trade_input.html")
 
