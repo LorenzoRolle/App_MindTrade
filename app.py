@@ -8,7 +8,9 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("MINDTRADE_SECRET", "dev-secret")
 
 # SQLite database config
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///mindtrade.db"
+import os
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(BASE_DIR, 'mindtrade.db')}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
@@ -64,6 +66,7 @@ def register():
             return render_template("register.html", error="Username already exists.")
         new_user = User(username=username, email=email, password=password)
         db.session.add(new_user)
+        print(f"✅ New user added: {username}")
         db.session.commit()
         session["user"] = username
         return redirect(url_for("trade_input"))
@@ -130,6 +133,7 @@ def trade_input():
         )
 
         db.session.add(new_trade)
+        print(f"✅ New trade added for user {username}: {form.get('asset_name', '')}, PNL={pnl_value}")
         db.session.commit()
 
         trades_data = [
