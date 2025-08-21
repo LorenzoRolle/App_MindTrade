@@ -3,3 +3,4 @@ flask_sqlalchemy
 gunicorn
 Werkzeug
 Textblob
+psycopg2-binary
