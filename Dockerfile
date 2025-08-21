@@ -15,5 +15,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Run with Gunicorn on port 5000
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "mindtrade_app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
 
