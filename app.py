@@ -164,7 +164,7 @@ def trade_input():
         ]
 
         bias_results = detect_all_biases(trades_data)
-                if action == "new_trade":
+        if action == "new_trade":
             return redirect(url_for("trade_input"))
         else:
             return render_template("results.html", bias_results=bias_results, total_trades=len(trades_data))
