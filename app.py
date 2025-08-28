@@ -65,6 +65,7 @@ def home():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
+        action = request.form.get("action")  # which button was clicked
         username = request.form["username"].strip()
         email = request.form.get("email", "").strip()
         password = request.form["password"]
@@ -82,6 +83,7 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
+        action = request.form.get("action")  # which button was clicked
         username = request.form["username"].strip()
         password = request.form["password"]
         user = User.query.filter_by(username=username).first()
@@ -107,6 +109,7 @@ def trade_input():
         return redirect(url_for("login"))
 
     if request.method == "POST":
+        action = request.form.get("action")  # which button was clicked
         form = request.form
         try:
             account_size = float(form.get("account_size", 0) or 0)
@@ -161,7 +164,10 @@ def trade_input():
         ]
 
         bias_results = detect_all_biases(trades_data)
-        return render_template("results.html", bias_results=bias_results, total_trades=len(trades_data))
+                if action == "new_trade":
+            return redirect(url_for("trade_input"))
+        else:
+            return render_template("results.html", bias_results=bias_results, total_trades=len(trades_data))
 
     return render_template("trade_input.html")
 

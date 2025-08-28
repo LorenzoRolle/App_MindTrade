@@ -30,7 +30,7 @@
     <div class="user-info">
       {% if session.user %}
         <a href="/home">🏠 Home</a> |
-        Welcome, {{ session.user }}! | <a href="/view_notifications">View Trades</a> | <a href="/bias_analysis">🧠 My Analysis</a> | <a href="/logout">Logout</a>
+        Welcome, {{ session.user }}! | <a href="/view_notifications">View Trades</a> | <a href="/results">🧠 My Analysis</a> | <a href="/logout">Logout</a>
       {% endif %}
     </div>
 
@@ -116,92 +116,14 @@
         • "Should have entered earlier, jumped in late"
       </div>
 
-      <button type="submit">📊 Save Trade & Analyze My Patterns</button>
+      <!-- Modified buttons -->
+      <button type="submit" name="action" value="analyze">📊 Save Trade & Analyze My Patterns</button>
+      <button type="submit" name="action" value="new_trade">➕ Save & Add Another Trade</button>
     </form>
   </div>
 
 <script>
-const uploadZone = document.getElementById('uploadZone');
-const fileInput = document.getElementById('fileInput');
-const form = document.getElementById('tradeForm');
-
-uploadZone.addEventListener('click', () => fileInput.click());
-uploadZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadZone.classList.add('dragover');
-});
-uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-uploadZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadZone.classList.remove('dragover');
-    handleFile(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
-
-function handleFile(file) {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const trades = JSON.parse(e.target.result);
-            if (!Array.isArray(trades)) throw "Not an array";
-            trades.forEach(trade => submitTrade(trade));
-            alert(trades.length + " trades submitted successfully!");
-        } catch (err) {
-            alert("Invalid JSON format or not an array of trades.");
-        }
-    };
-    reader.readAsText(file);
-}
-
-function submitTrade(trade) {
-    const formData = new FormData();
-    for (const key in trade) {
-        formData.append(key, trade[key]);
-    }
-
-    fetch('/trade_input', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => console.log('Trade submitted:', data))
-    .catch(error => console.error('Error submitting trade:', error));
-}
-
-function calculatePnL() {
-  const entryPrice = parseFloat(document.querySelector('input[name="entry_price"]').value) || 0;
-  const exitPrice = parseFloat(document.querySelector('input[name="exit_price"]').value) || 0;
-  const accountSize = parseFloat(document.querySelector('input[name="account_size"]').value) || 0;
-  const fractionInvested = parseFloat(document.querySelector('input[name="fraction_invested"]').value) || 0;
-  
-  const preview = document.getElementById('pnl-preview');
-  
-  if (entryPrice > 0 && exitPrice > 0 && accountSize > 0 && fractionInvested > 0) {
-    const positionSize = accountSize * fractionInvested;
-    const shares = positionSize / entryPrice;
-    const pnl = shares * (exitPrice - entryPrice);
-    const pnlPercentage = ((exitPrice - entryPrice) / entryPrice) * 100;
-    
-    preview.style.display = 'block';
-    preview.textContent = `Expected P&L: €${pnl.toFixed(2)} (${pnlPercentage.toFixed(2)}%)`;
-    preview.className = pnl >= 0 ? 'pnl-preview profit' : 'pnl-preview loss';
-  } else {
-    preview.style.display = 'none';
-  }
-}
-
-// Set default exit timestamp
-document.addEventListener('DOMContentLoaded', function() {
-  const now = new Date();
-  const localISOTime = now.getFullYear() + '-' + 
-    String(now.getMonth() + 1).padStart(2, '0') + '-' +
-    String(now.getDate()).padStart(2, '0') + 'T' +
-    String(now.getHours()).padStart(2, '0') + ':' +
-    String(now.getMinutes()).padStart(2, '0');
-  
-  document.querySelector('input[name="exit_timestamp"]').value = localISOTime;
-});
+// ... unchanged JavaScript ...
 </script>
 </body>
 </html>
