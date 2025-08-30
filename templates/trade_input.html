@@ -182,7 +182,7 @@
     });
 
     // --- Drag and Drop for JSON File ---
-    const dropzone = document.getElementById('dropzone');
+    const dropzone = document.getElementById('uploadzone');
     dropzone.addEventListener('dragover', (e) => {
       e.preventDefault();
       dropzone.style.backgroundColor = '#e0e0e0';
@@ -202,7 +202,7 @@
       }
 
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = (event0) => {
         try {
           const trades = JSON.parse(event.target.result);
           trades.forEach((trade, i) => {
