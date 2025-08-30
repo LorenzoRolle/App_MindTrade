@@ -181,11 +181,11 @@ def view_notifications():
     trades = user.trades if user else []
     return render_template("view_notifications.html", trades=trades, total_trades=len(trades))
 
-@app.route("/api/bias_analysis")
-def api_bias_analysis():
+@app.route("/results")
+def results():
     username = session.get("user")
     if not username:
-        return jsonify({"error": "not authenticated"}), 401
+        return redirect(url_for("login"))
 
     user = User.query.filter_by(username=username).first()
     trades_data = [
@@ -205,7 +205,7 @@ def api_bias_analysis():
         for t in user.trades
     ]
     bias_results = detect_all_biases(trades_data)
-    return jsonify(bias_results)
+    return render_template("results.html", bias_results=bias_results, total_trades=len(trades_data))
 
 # Always ensure database tables exist at startup
 with app.app_context():
