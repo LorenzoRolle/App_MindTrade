@@ -22,16 +22,17 @@
     .hint { font-size: 12px; color: #666; font-style: italic; margin-top: 5px; }
     .upload-zone { border: 2px dashed #888; border-radius: 10px; padding: 20px; text-align: center; color: #aaa; font-size: 16px; transition: border-color 0.3s; cursor: pointer; margin-bottom: 15px; }
     .upload-zone.dragover { border-color: #4cafef; color: #4cafef; }
+    .upload-status { margin-top: 10px; padding: 10px; border-radius: 5px; display: none; }
+    .success { background-color: #d4edda; color: #155724; }
+    .error { background-color: #f8d7da; color: #721c24; }
     @media (max-width: 600px) { .container { padding: 20px; } input, textarea, select { font-size: 16px; } }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="user-info">
-      {% if session.user %}
-        <a href="/home">🏠 Home</a> |
-        Welcome, {{ session.user }}! | <a href="/view_notifications">View Trades</a> | <a href="/results">🧠 My Analysis</a> | <a href="/logout">Logout</a>
-      {% endif %}
+      <a href="/home">🏠 Home</a> |
+      Welcome, User! | <a href="/view_notifications">View Trades</a> | <a href="/results">🧠 My Analysis</a> | <a href="/logout">Logout</a>
     </div>
 
     <h2>🧠 Insert Trade for Analysis</h2>
@@ -41,15 +42,16 @@
       Drag & Drop JSON File Here or Click to Select
     </div>
     <input type="file" id="fileInput" accept=".json" style="display:none;">
+    <div id="uploadStatus" class="upload-status"></div>
 
     <form method="POST" action="/trade_input" id="tradeForm">
       <h3>📊 Trade Details</h3>
 
       <label>Asset Name *</label>
-      <input type="text" name="asset_name" placeholder="e.g., AAPL, Bitcoin, EUR/USD" required>
+      <input type="text" name="asset_name" id="asset_name" placeholder="e.g., AAPL, Bitcoin, EUR/USD" required>
       
       <label>Asset Type</label>
-      <select name="asset_type">
+      <select name="asset_type" id="asset_type">
         <option value="">-- Select --</option>
         <option value="stock">Stock</option>
         <option value="etf">ETF</option>
@@ -58,24 +60,24 @@
       </select>
 
       <label>Entry Price *</label>
-      <input type="number" step="0.0001" min="0" name="entry_price" placeholder="e.g., 105.50" required onchange="calculatePnL()">
+      <input type="number" step="0.0001" min="0" name="entry_price" id="entry_price" placeholder="e.g., 105.50" required onchange="calculatePnL()">
 
       <label>Exit Price *</label>
-      <input type="number" step="0.0001" min="0" name="exit_price" placeholder="e.g., 110.00" required onchange="calculatePnL()">
+      <input type="number" step="0.0001" min="0" name="exit_price" id="exit_price" placeholder="e.g., 110.00" required onchange="calculatePnL()">
 
       <label>Entry Timestamp *</label>
-      <input type="datetime-local" name="entry_timestamp" required>
+      <input type="datetime-local" name="entry_timestamp" id="entry_timestamp" required>
 
       <label>Exit Timestamp *</label>
-      <input type="datetime-local" name="exit_timestamp" required>
+      <input type="datetime-local" name="exit_timestamp" id="exit_timestamp" required>
 
       <h3>💰 Risk Sizing</h3>
 
       <label>Account Size *</label>
-      <input type="number" step="0.01" min="0" name="account_size" placeholder="e.g., 5000.00" required onchange="calculatePnL()">
+      <input type="number" step="0.01" min="0" name="account_size" id="account_size" placeholder="e.g., 5000.00" required onchange="calculatePnL()">
 
       <label>Fraction Invested *</label>
-      <input type="number" step="0.0001" min="0" max="1" name="fraction_invested" placeholder="e.g., 0.25 (25% of account)" required onchange="calculatePnL()">
+      <input type="number" step="0.0001" min="0" max="1" name="fraction_invested" id="fraction_invested" placeholder="e.g., 0.25 (25% of account)" required onchange="calculatePnL()">
       <div class="hint">Enter as decimal: 0.1 = 10%, 0.25 = 25%, etc.</div>
 
       <div id="pnl-preview" class="pnl-preview" style="display: none;"></div>
@@ -83,14 +85,14 @@
       <h3>🧭 Strategy & Psychology</h3>
 
       <label>Direction *</label>
-      <select name="direction" required>
+      <select name="direction" id="direction" required>
         <option value="">-- Select --</option>
         <option value="long">Long</option>
         <option value="short">Short</option>
       </select>
 
       <label>Trade Reason</label>
-      <select name="trade_reason">
+      <select name="trade_reason" id="trade_reason">
         <option value="">-- Select --</option>
         <option value="technical_analysis">Technical Analysis</option>
         <option value="fundamental_analysis">Fundamental Analysis</option>
@@ -106,7 +108,7 @@
       </select>
 
       <label>Notes / Trading Psychology *</label>
-      <textarea name="notes" placeholder="Be honest about your emotions and thought process..." required></textarea>
+      <textarea name="notes" id="notes" placeholder="Be honest about your emotions and thought process..." required></textarea>
       
       <div class="hint">
         💡 <strong>Examples of useful notes:</strong><br>
@@ -116,119 +118,164 @@
         • "Should have entered earlier, jumped in late"
       </div>
 
-      <!-- Modified buttons -->
       <button type="submit" name="action" value="analyze">📊 Save Trade & Analyze My Patterns</button>
       <button type="submit" name="action" value="new_trade">➕ Save & Add Another Trade</button>
     </form>
   </div>
 
 <script>
-    const MAX_TRADES = 10;
-
-    function addTradeBlock(prefill = null) {
-      const blocks = document.querySelectorAll('.trade-block');
-      if (blocks.length >= MAX_TRADES) {
-        alert(`You can only input up to ${MAX_TRADES} trades.`);
-        return;
-      }
-
-      const lastBlock = blocks[blocks.length - 1];
-      const newBlock = lastBlock.cloneNode(true);
-
-      // Clear inputs unless prefill is given
-      const inputs = newBlock.querySelectorAll('input, textarea, select');
-      inputs.forEach((input) => {
-        if (prefill) {
-          const name = input.name.replace("[]", "");
-          if (prefill[name] !== undefined) {
-            input.value = prefill[name];
-          }
+    // PnL calculation function
+    function calculatePnL() {
+        const entryPrice = parseFloat(document.getElementById('entry_price').value);
+        const exitPrice = parseFloat(document.getElementById('exit_price').value);
+        const accountSize = parseFloat(document.getElementById('account_size').value);
+        const fractionInvested = parseFloat(document.getElementById('fraction_invested').value);
+        const direction = document.getElementById('direction').value;
+        
+        if (!entryPrice || !exitPrice || !accountSize || !fractionInvested || !direction) {
+            document.getElementById('pnl-preview').style.display = 'none';
+            return;
+        }
+        
+        const investedAmount = accountSize * fractionInvested;
+        let pnl;
+        
+        if (direction === 'long') {
+            pnl = (exitPrice - entryPrice) / entryPrice * investedAmount;
+        } else if (direction === 'short') {
+            pnl = (entryPrice - exitPrice) / entryPrice * investedAmount;
         } else {
-          input.value = '';
-          if (input.tagName === 'SELECT') input.selectedIndex = 0;
+            return;
         }
-      });
-
-      // Add copy button if not present
-      if (!newBlock.querySelector('.copy-button')) {
-        const copyBtn = document.createElement('button');
-        copyBtn.type = 'button';
-        copyBtn.className = 'copy-button';
-        copyBtn.innerText = 'Copy Previous Trade';
-        copyBtn.onclick = () => copyPreviousTrade(newBlock);
-        newBlock.appendChild(copyBtn);
-      }
-
-      document.getElementById('trade-form').insertBefore(newBlock, document.querySelector('.add-button'));
+        
+        const pnlPercent = (pnl / accountSize) * 100;
+        const preview = document.getElementById('pnl-preview');
+        
+        preview.innerHTML = `P&L: $${pnl.toFixed(2)} (${pnlPercent.toFixed(2)}% of account)`;
+        preview.className = 'pnl-preview ' + (pnl >= 0 ? 'profit' : 'loss');
+        preview.style.display = 'block';
     }
 
-    function copyPreviousTrade(currentBlock) {
-      const blocks = Array.from(document.querySelectorAll('.trade-block'));
-      const index = blocks.indexOf(currentBlock);
-      if (index <= 0) return alert('No previous trade to copy.');
+    // File upload functionality
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadStatus = document.getElementById('uploadStatus');
 
-      const prevInputs = blocks[index - 1].querySelectorAll('input, textarea, select');
-      const currInputs = currentBlock.querySelectorAll('input, textarea, select');
-
-      prevInputs.forEach((input, i) => {
-        currInputs[i].value = input.value;
-      });
-    }
-
-    document.getElementById('trade-form').addEventListener('submit', function (e) {
-      e.preventDefault();
-      document.getElementById('confirmation').style.display = 'block';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Click to select file
+    uploadZone.addEventListener('click', () => {
+        fileInput.click();
     });
 
-    // --- Drag and Drop for JSON File ---
-    const dropzone = document.getElementById('uploadZone');
-    dropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropzone.style.backgroundColor = '#e0e0e0';
+    // Handle file selection via input
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            handleFile(file);
+        }
     });
 
-    dropzone.addEventListener('dragleave', () => {
-      dropzone.style.backgroundColor = '';
+    // Drag and drop handlers
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
     });
 
-    dropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropzone.style.backgroundColor = '';
-      const file = e.dataTransfer.files[0];
-      if (!file || !file.name.endsWith('.json')) {
-        alert('Please drop a valid .json file');
-        return;
-      }
+    uploadZone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+    });
 
-      const reader = new FileReader();
-      reader.onload = (event0) => {
-        try {
-          const trades = JSON.parse(event.target.result);
-          trades.forEach((trade, i) => {
-            if (i === 0) {
-              // Fill the first trade block
-              fillBlock(document.querySelector('.trade-block'), trade);
-            } else {
-              addTradeBlock(trade);
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            handleFile(file);
+        }
+    });
+
+    // Handle file processing
+    function handleFile(file) {
+        if (!file.name.endsWith('.json')) {
+            showStatus('Please select a valid JSON file', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {  // Fixed: was event0
+            try {
+                const data = JSON.parse(event.target.result);
+                
+                // Check if it's a single trade object or array of trades
+                const trades = Array.isArray(data) ? data : [data];
+                
+                if (trades.length === 0) {
+                    showStatus('No trade data found in JSON file', 'error');
+                    return;
+                }
+
+                // Fill form with first trade (assuming single trade for this form)
+                const trade = trades[0];
+                fillFormFromTrade(trade);
+                
+                showStatus(`Successfully loaded trade data: ${trade.asset_name || 'Unknown Asset'}`, 'success');
+                
+            } catch (err) {
+                showStatus('Invalid JSON file format', 'error');
             }
-          });
-        } catch (err) {
-          alert('Invalid JSON file');
-        }
-      };
-      reader.readAsText(file);
-    });
-
-    function fillBlock(block, data) {
-      const inputs = block.querySelectorAll('input, textarea, select');
-      inputs.forEach((input) => {
-        const name = input.name.replace("[]", "");
-        if (data[name] !== undefined) {
-          input.value = data[name];
-        }
-      });
+        };
+        
+        reader.onerror = () => {
+            showStatus('Error reading file', 'error');
+        };
+        
+        reader.readAsText(file);
     }
+
+    // Fill form fields from trade data
+    function fillFormFromTrade(trade) {
+        const fieldMap = {
+            'asset_name': trade.asset_name,
+            'asset_type': trade.asset_type,
+            'entry_price': trade.entry_price,
+            'exit_price': trade.exit_price,
+            'entry_timestamp': trade.entry_timestamp,
+            'exit_timestamp': trade.exit_timestamp,
+            'account_size': trade.account_size,
+            'fraction_invested': trade.fraction_invested,
+            'direction': trade.direction,
+            'trade_reason': trade.trade_reason,
+            'notes': trade.notes
+        };
+
+        Object.keys(fieldMap).forEach(fieldName => {
+            const element = document.getElementById(fieldName);
+            if (element && fieldMap[fieldName] !== undefined) {
+                element.value = fieldMap[fieldName];
+            }
+        });
+
+        // Trigger PnL calculation after filling
+        calculatePnL();
+    }
+
+    // Show upload status messages
+    function showStatus(message, type) {
+        uploadStatus.textContent = message;
+        uploadStatus.className = `upload-status ${type}`;
+        uploadStatus.style.display = 'block';
+        
+        // Hide after 3 seconds for success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                uploadStatus.style.display = 'none';
+            }, 3000);
+        }
+    }
+
+    // Update direction change to trigger PnL calculation
+    document.getElementById('direction').addEventListener('change', calculatePnL);
 </script>
 </body>
 </html>
