@@ -123,7 +123,112 @@
   </div>
 
 <script>
-// ... unchanged JavaScript ...
+    const MAX_TRADES = 10;
+
+    function addTradeBlock(prefill = null) {
+      const blocks = document.querySelectorAll('.trade-block');
+      if (blocks.length >= MAX_TRADES) {
+        alert(`You can only input up to ${MAX_TRADES} trades.`);
+        return;
+      }
+
+      const lastBlock = blocks[blocks.length - 1];
+      const newBlock = lastBlock.cloneNode(true);
+
+      // Clear inputs unless prefill is given
+      const inputs = newBlock.querySelectorAll('input, textarea, select');
+      inputs.forEach((input) => {
+        if (prefill) {
+          const name = input.name.replace("[]", "");
+          if (prefill[name] !== undefined) {
+            input.value = prefill[name];
+          }
+        } else {
+          input.value = '';
+          if (input.tagName === 'SELECT') input.selectedIndex = 0;
+        }
+      });
+
+      // Add copy button if not present
+      if (!newBlock.querySelector('.copy-button')) {
+        const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'copy-button';
+        copyBtn.innerText = 'Copy Previous Trade';
+        copyBtn.onclick = () => copyPreviousTrade(newBlock);
+        newBlock.appendChild(copyBtn);
+      }
+
+      document.getElementById('trade-form').insertBefore(newBlock, document.querySelector('.add-button'));
+    }
+
+    function copyPreviousTrade(currentBlock) {
+      const blocks = Array.from(document.querySelectorAll('.trade-block'));
+      const index = blocks.indexOf(currentBlock);
+      if (index <= 0) return alert('No previous trade to copy.');
+
+      const prevInputs = blocks[index - 1].querySelectorAll('input, textarea, select');
+      const currInputs = currentBlock.querySelectorAll('input, textarea, select');
+
+      prevInputs.forEach((input, i) => {
+        currInputs[i].value = input.value;
+      });
+    }
+
+    document.getElementById('trade-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      document.getElementById('confirmation').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // --- Drag and Drop for JSON File ---
+    const dropzone = document.getElementById('dropzone');
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.style.backgroundColor = '#e0e0e0';
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.style.backgroundColor = '';
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.style.backgroundColor = '';
+      const file = e.dataTransfer.files[0];
+      if (!file || !file.name.endsWith('.json')) {
+        alert('Please drop a valid .json file');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const trades = JSON.parse(event.target.result);
+          trades.forEach((trade, i) => {
+            if (i === 0) {
+              // Fill the first trade block
+              fillBlock(document.querySelector('.trade-block'), trade);
+            } else {
+              addTradeBlock(trade);
+            }
+          });
+        } catch (err) {
+          alert('Invalid JSON file');
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    function fillBlock(block, data) {
+      const inputs = block.querySelectorAll('input, textarea, select');
+      inputs.forEach((input) => {
+        const name = input.name.replace("[]", "");
+        if (data[name] !== undefined) {
+          input.value = data[name];
+        }
+      });
+    }
 </script>
 </body>
 </html>
