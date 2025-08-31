@@ -77,6 +77,10 @@ a:hover {
 <body>
   <div class="container">
     <h2>Sign up</h2>
+    {% if error %}
+        <p style="color:red; font-weight:bold;">Username or email already used!</p>
+    {% endif %}
+
     <form method="post">
         <input type="text" name="username" placeholder="Username" required><br>
         <input type="email" name="email" placeholder="Email" required><br>
