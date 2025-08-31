@@ -69,12 +69,10 @@ def register():
         username = request.form["username"].strip()
         email = request.form.get("email", "").strip()
         password = request.form["password"]
-
         if User.query.filter_by(username=username).first():
-    		return render_template("register.html", error="Username already used.")
-	if User.query.filter_by(email=email).first():
-    		return render_template("register.html", error="Email already used.")
-
+    	    return render_template("register.html", error="Username already used.")
+        if User.query.filter_by(email=email).first():
+    	    return render_template("register.html", error="Email already used.")
         new_user = User(username=username, email=email, password=password)
         db.session.add(new_user)
         print(f"✅ New user added: {username}")
