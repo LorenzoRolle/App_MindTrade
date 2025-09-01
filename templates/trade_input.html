@@ -113,7 +113,7 @@
         <textarea name="notes[]" placeholder="Be honest about your emotions..." required></textarea>
       </div>
 
-           <!-- 🔽 Bottone sempre in fondo -->
+           <!-- 📽 Bottone sempre in fondo -->
       <div class="form-buttons">
         <button type="button" class="add-button" onclick="addTradeBlock()">➕ Add Another Trade</button>
         <button type="submit" name="action" value="analyze">📊 Save & Analyze My Patterns</button>
@@ -122,30 +122,34 @@
   </div>
 
 <script>
-  // Clone trade block
-  function addTradeBlock() {
-  const blocks = document.querySelectorAll('.trade-block');
-  if (blocks.length >= 10) {
-    alert("You can only input up to 10 trades.");
-    return;
+  // Clone trade block - FIXED VERSION
+  function addTradeBlock(tradeData = null) {
+    const blocks = document.querySelectorAll('.trade-block');
+    if (blocks.length >= 10) {
+      alert("You can only input up to 10 trades.");
+      return;
+    }
+
+    const lastBlock = blocks[blocks.length - 1];
+    const newBlock = lastBlock.cloneNode(true);
+
+    // Pulisci i campi
+    const inputs = newBlock.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+      input.value = '';
+      if (input.tagName === 'SELECT') input.selectedIndex = 0;
+    });
+
+    // Se ci sono dati del trade, riempili
+    if (tradeData) {
+      fillFormFromTrade(newBlock, tradeData);
+    }
+
+    // Inserisci il nuovo blocco PRIMA del div dei bottoni
+    const form = document.getElementById('tradeForm');
+    const buttons = form.querySelector('.form-buttons');
+    form.insertBefore(newBlock, buttons);
   }
-
-  const lastBlock = blocks[blocks.length - 1];
-  const newBlock = lastBlock.cloneNode(true);
-
-  // Pulisci i campi
-  const inputs = newBlock.querySelectorAll('input, textarea, select');
-  inputs.forEach(input => {
-    input.value = '';
-    if (input.tagName === 'SELECT') input.selectedIndex = 0;
-  });
-
-  // Inserisci il nuovo blocco PRIMA del div dei bottoni
-  const form = document.getElementById('tradeForm');
-  const buttons = form.querySelector('.form-buttons');
-  form.insertBefore(newBlock, buttons);
-}
-
 
   // PnL calc per block
   function calculatePnL(el) {
@@ -172,7 +176,7 @@
     pnlBox.style.display = "block";
   }
 
-  // --- JSON Upload (multiple trades supported) ---
+  // --- JSON Upload (multiple trades supported) - FIXED VERSION ---
   const uploadZone = document.getElementById('uploadZone');
   const fileInput = document.getElementById('fileInput');
   const uploadStatus = document.getElementById('uploadStatus');
@@ -191,8 +195,11 @@
         const data = JSON.parse(e.target.result);
         const trades = Array.isArray(data) ? data : [data];
         trades.forEach((t,i) => {
-          if (i===0) fillFormFromTrade(document.querySelector('.trade-block'), t);
-          else addTradeBlock(t);
+          if (i===0) {
+            fillFormFromTrade(document.querySelector('.trade-block'), t);
+          } else {
+            addTradeBlock(t); // ⬅️ Ora passa i dati del trade
+          }
         });
         showStatus(`Loaded ${trades.length} trades`, 'success');
       } catch { showStatus('Invalid JSON format','error'); }
@@ -216,4 +223,3 @@
 </script>
 </body>
 </html>
-
