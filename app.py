@@ -113,62 +113,65 @@ def trade_input():
         action = request.form.get("action")  # which button was clicked
         form = request.form
         try:
-            account_size = float(form.get("account_size", 0) or 0)
-            fraction_invested = float(form.get("fraction_invested", 0) or 0)
-            entry_price = float(form.get("entry_price", 0) or 0)
-            exit_price = float(form.get("exit_price", 0) or 0)
+            entry_price = form.getlist("entry_price[]")
+            exit_price = form.getlist("exit_price[]")
+            account_size = form.getlist("account_size[]")
+            fraction_invested = form.getlist("fraction_invested[]")
         except ValueError:
             return render_template("trade_input.html", error="Please enter valid numeric values.")
+        
+        entry_times = form.getlist("entry_timestamp[]")
+        exit_times = form.getlist("exit_timestamp[]")
+        asset_name = form.getList("asset_name[]")
+        asset_types = form.getlist("asset_type[]")
+        directions = form.getlist("direction[]")
+        reasons = form.getlist("trade_reason[]")
+        notes = form.getlist("notes[]")
+        
+        for i in range(len(asset_name)):
+            position_size = account_size * fraction_invested
+            shares = position_size / entry_price if entry_price != 0 else 0.0
+            pnl_value = shares * (exit_price - entry_price)
 
-        entry_time = form.get("entry_timestamp")
-        exit_time = form.get("exit_timestamp")
+            new_trade = Trade(
+                user_id=user.id,
+                asset_name=form.get("asset_name", ""),
+                asset_type=form.get("asset_type", "").lower(),
+                fraction_invested=fraction_invested,
+                pnl=pnl_value,
+                sold_early=False,
+                held_too_long=False,
+                direction=form.get("direction", "").lower(),
+                trade_reason=form.get("trade_reason", "").lower(),
+                notes=form.get("notes", ""),
+                size=position_size,
+                entry_time=entry_time,
+                exit_time=exit_time
+            )
 
-        position_size = account_size * fraction_invested
-        shares = position_size / entry_price if entry_price != 0 else 0.0
-        pnl_value = shares * (exit_price - entry_price)
+            db.session.add(new_trade)
+            print(f"✅ New trade added for user {username}: {form.get('asset_name', '')}, PNL={pnl_value}")
+            db.session.commit()
 
-        new_trade = Trade(
-            user_id=user.id,
-            asset_name=form.get("asset_name", ""),
-            asset_type=form.get("asset_type", "").lower(),
-            fraction_invested=fraction_invested,
-            pnl=pnl_value,
-            sold_early=False,
-            held_too_long=False,
-            direction=form.get("direction", "").lower(),
-            trade_reason=form.get("trade_reason", "").lower(),
-            notes=form.get("notes", ""),
-            size=position_size,
-            entry_time=entry_time,
-            exit_time=exit_time
-        )
-
-        db.session.add(new_trade)
-        print(f"✅ New trade added for user {username}: {form.get('asset_name', '')}, PNL={pnl_value}")
-        db.session.commit()
-
-        trades_data = [
-            {
-                "asset_type": t.asset_type,
-                "fraction_invested": t.fraction_invested,
-                "pnl": t.pnl,
-                "sold_early": t.sold_early,
-                "held_too_long": t.held_too_long,
-                "direction": t.direction,
-                "trade_reason": t.trade_reason,
-                "notes": t.notes,
-                "size": t.size,
-                "entry_time": t.entry_time,
-                "exit_time": t.exit_time
-            }
-            for t in user.trades
-        ]
+            trades_data = [
+                {
+                    "asset_type": t.asset_type,
+                    "fraction_invested": t.fraction_invested,
+                    "pnl": t.pnl,
+                    "sold_early": t.sold_early,
+                    "held_too_long": t.held_too_long,
+                    "direction": t.direction,
+                    "trade_reason": t.trade_reason,
+                    "notes": t.notes,
+                    "size": t.size,
+                    "entry_time": t.entry_time,
+                    "exit_time": t.exit_time
+                }
+                for t in user.trades
+            ]
 
         bias_results = detect_all_biases(trades_data)
-        if action == "new_trade":
-            return redirect(url_for("trade_input"))
-        else:
-            return render_template("results.html", bias_results=bias_results, total_trades=len(trades_data))
+        return render_template("results.html", bias_results=bias_results, total_trades=len(trades_data))
 
     return render_template("trade_input.html")
 
