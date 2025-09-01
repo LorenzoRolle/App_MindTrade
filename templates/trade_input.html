@@ -26,6 +26,8 @@
     .success { background-color: #d4edda; color: #155724; }
     .error { background-color: #f8d7da; color: #721c24; }
     @media (max-width: 600px) { .container { padding: 20px; } input, textarea, select { font-size: 16px; } }
+    .add-button{background-color: #28a745; color: white;}
+    .add-button:hover {background-color: #218838;}
   </style>
 </head>
 <body>
@@ -46,237 +48,172 @@
     <div id="uploadStatus" class="upload-status"></div>
 
     <form method="POST" action="/trade_input" id="tradeForm">
-      <h3>📊 Trade Details</h3>
+      <div class="trade-block">
+        <h3>📊 Trade Details</h3>
 
-      <label>Asset Name *</label>
-      <input type="text" name="asset_name" id="asset_name" placeholder="e.g., AAPL, Bitcoin, EUR/USD" required>
-      
-      <label>Asset Type</label>
-      <select name="asset_type" id="asset_type">
-        <option value="">-- Select --</option>
-        <option value="stock">Stock</option>
-        <option value="etf">ETF</option>
-        <option value="crypto">Crypto</option>
-        <option value="forex">Forex</option>
-      </select>
+        <label>Asset Name *</label>
+        <input type="text" name="asset_name[]" placeholder="e.g., AAPL, Bitcoin, EUR/USD" required>
+        
+        <label>Asset Type</label>
+        <select name="asset_type[]">
+          <option value="">-- Select --</option>
+          <option value="stock">Stock</option>
+          <option value="etf">ETF</option>
+          <option value="crypto">Crypto</option>
+          <option value="forex">Forex</option>
+        </select>
 
-      <label>Entry Price *</label>
-      <input type="number" step="0.0001" min="0" name="entry_price" id="entry_price" placeholder="e.g., 105.50" required onchange="calculatePnL()">
+        <label>Entry Price *</label>
+        <input type="number" step="0.0001" min="0" name="entry_price[]" placeholder="e.g., 105.50" required onchange="calculatePnL(this)">
 
-      <label>Exit Price *</label>
-      <input type="number" step="0.0001" min="0" name="exit_price" id="exit_price" placeholder="e.g., 110.00" required onchange="calculatePnL()">
+        <label>Exit Price *</label>
+        <input type="number" step="0.0001" min="0" name="exit_price[]" placeholder="e.g., 110.00" required onchange="calculatePnL(this)">
 
-      <label>Entry Timestamp *</label>
-      <input type="datetime-local" name="entry_timestamp" id="entry_timestamp" required>
+        <label>Entry Timestamp *</label>
+        <input type="datetime-local" name="entry_timestamp[]" required>
 
-      <label>Exit Timestamp *</label>
-      <input type="datetime-local" name="exit_timestamp" id="exit_timestamp" required>
+        <label>Exit Timestamp *</label>
+        <input type="datetime-local" name="exit_timestamp[]" required>
 
-      <h3>💰 Risk Sizing</h3>
+        <h3>💰 Risk Sizing</h3>
+        <label>Account Size *</label>
+        <input type="number" step="0.01" min="0" name="account_size[]" placeholder="e.g., 5000.00" required onchange="calculatePnL(this)">
 
-      <label>Account Size *</label>
-      <input type="number" step="0.01" min="0" name="account_size" id="account_size" placeholder="e.g., 5000.00" required onchange="calculatePnL()">
+        <label>Fraction Invested *</label>
+        <input type="number" step="0.0001" min="0" max="1" name="fraction_invested[]" placeholder="e.g., 0.25" required onchange="calculatePnL(this)">
+        <div class="hint">Enter as decimal: 0.1 = 10%, 0.25 = 25%, etc.</div>
 
-      <label>Fraction Invested *</label>
-      <input type="number" step="0.0001" min="0" max="1" name="fraction_invested" id="fraction_invested" placeholder="e.g., 0.25 (25% of account)" required onchange="calculatePnL()">
-      <div class="hint">Enter as decimal: 0.1 = 10%, 0.25 = 25%, etc.</div>
+        <div class="pnl-preview" style="display: none;"></div>
 
-      <div id="pnl-preview" class="pnl-preview" style="display: none;"></div>
+        <h3>🧭 Strategy & Psychology</h3>
+        <label>Direction *</label>
+        <select name="direction[]" required onchange="calculatePnL(this)">
+          <option value="">-- Select --</option>
+          <option value="long">Long</option>
+          <option value="short">Short</option>
+        </select>
 
-      <h3>🧭 Strategy & Psychology</h3>
+        <label>Trade Reason</label>
+        <select name="trade_reason[]">
+          <option value="">-- Select --</option>
+          <option value="technical_analysis">Technical Analysis</option>
+          <option value="fundamental_analysis">Fundamental Analysis</option>
+          <option value="news_based">News Based</option>
+          <option value="trend_following">Trend Following</option>
+          <option value="breakout">Breakout</option>
+          <option value="fomo">FOMO</option>
+          <option value="chasing">Chasing</option>
+          <option value="revenge">Revenge Trading</option>
+          <option value="scalping">Scalping</option>
+          <option value="swing">Swing Trading</option>
+          <option value="other">Other</option>
+        </select>
 
-      <label>Direction *</label>
-      <select name="direction" id="direction" required>
-        <option value="">-- Select --</option>
-        <option value="long">Long</option>
-        <option value="short">Short</option>
-      </select>
-
-      <label>Trade Reason</label>
-      <select name="trade_reason" id="trade_reason">
-        <option value="">-- Select --</option>
-        <option value="technical_analysis">Technical Analysis</option>
-        <option value="fundamental_analysis">Fundamental Analysis</option>
-        <option value="news_based">News Based</option>
-        <option value="trend_following">Trend Following</option>
-        <option value="breakout">Breakout</option>
-        <option value="fomo">FOMO</option>
-        <option value="chasing">Chasing</option>
-        <option value="revenge">Revenge Trading</option>
-        <option value="scalping">Scalping</option>
-        <option value="swing">Swing Trading</option>
-        <option value="other">Other</option>
-      </select>
-
-      <label>Notes / Trading Psychology *</label>
-      <textarea name="notes" id="notes" placeholder="Be honest about your emotions and thought process..." required></textarea>
-      
-      <div class="hint">
-        💡 <strong>Examples of useful notes:</strong><br>
-        • "Saw everyone talking about this on Twitter, had to get in"<br>
-        • "Was angry about previous loss, wanted to make it back quickly"<br>
-        • "Breakout looked perfect, felt very confident"<br>
-        • "Should have entered earlier, jumped in late"
+        <label>Notes / Trading Psychology *</label>
+        <textarea name="notes[]" placeholder="Be honest about your emotions..." required></textarea>
       </div>
 
-      <button type="submit" name="action" value="analyze">📊 Save Trade & Analyze My Patterns</button>
-      <button type="submit" name="action" value="new_trade">➕ Save & Add Another Trade</button>
+           <!-- 🔽 Bottone sempre in fondo -->
+      <div class="form-buttons">
+        <button type="button" class="add-button" onclick="addTradeBlock()">➕ Add Another Trade</button>
+        <button type="submit" name="action" value="analyze">📊 Save & Analyze My Patterns</button>
+      </div>
     </form>
   </div>
 
 <script>
-    // PnL calculation function
-    function calculatePnL() {
-        const entryPrice = parseFloat(document.getElementById('entry_price').value);
-        const exitPrice = parseFloat(document.getElementById('exit_price').value);
-        const accountSize = parseFloat(document.getElementById('account_size').value);
-        const fractionInvested = parseFloat(document.getElementById('fraction_invested').value);
-        const direction = document.getElementById('direction').value;
-        
-        if (!entryPrice || !exitPrice || !accountSize || !fractionInvested || !direction) {
-            document.getElementById('pnl-preview').style.display = 'none';
-            return;
-        }
-        
-        const investedAmount = accountSize * fractionInvested;
-        let pnl;
-        
-        if (direction === 'long') {
-            pnl = (exitPrice - entryPrice) / entryPrice * investedAmount;
-        } else if (direction === 'short') {
-            pnl = (entryPrice - exitPrice) / entryPrice * investedAmount;
-        } else {
-            return;
-        }
-        
-        const pnlPercent = (pnl / accountSize) * 100;
-        const preview = document.getElementById('pnl-preview');
-        
-        preview.innerHTML = `P&L: $${pnl.toFixed(2)} (${pnlPercent.toFixed(2)}% of account)`;
-        preview.className = 'pnl-preview ' + (pnl >= 0 ? 'profit' : 'loss');
-        preview.style.display = 'block';
+  // Clone trade block
+  function addTradeBlock() {
+  const blocks = document.querySelectorAll('.trade-block');
+  if (blocks.length >= 10) {
+    alert("You can only input up to 10 trades.");
+    return;
+  }
+
+  const lastBlock = blocks[blocks.length - 1];
+  const newBlock = lastBlock.cloneNode(true);
+
+  // Pulisci i campi
+  const inputs = newBlock.querySelectorAll('input, textarea, select');
+  inputs.forEach(input => {
+    input.value = '';
+    if (input.tagName === 'SELECT') input.selectedIndex = 0;
+  });
+
+  // Inserisci il nuovo blocco PRIMA del div dei bottoni
+  const form = document.getElementById('tradeForm');
+  const buttons = form.querySelector('.form-buttons');
+  form.insertBefore(newBlock, buttons);
+}
+
+
+  // PnL calc per block
+  function calculatePnL(el) {
+    const block = el.closest('.trade-block');
+    const entry = parseFloat(block.querySelector('[name="entry_price[]"]').value);
+    const exit = parseFloat(block.querySelector('[name="exit_price[]"]').value);
+    const acc = parseFloat(block.querySelector('[name="account_size[]"]').value);
+    const frac = parseFloat(block.querySelector('[name="fraction_invested[]"]').value);
+    const dir = block.querySelector('[name="direction[]"]').value;
+
+    if (!entry || !exit || !acc || !frac || !dir) {
+      block.querySelector('.pnl-preview').style.display = "none";
+      return;
     }
 
-    // File upload functionality
-    const uploadZone = document.getElementById('uploadZone');
-    const fileInput = document.getElementById('fileInput');
-    const uploadStatus = document.getElementById('uploadStatus');
+    const invested = acc * frac;
+    let pnl = 0;
+    if (dir === "long") pnl = (exit - entry) / entry * invested;
+    if (dir === "short") pnl = (entry - exit) / entry * invested;
 
-    // Click to select file
-    uploadZone.addEventListener('click', () => {
-        fileInput.click();
-    });
+    const pnlBox = block.querySelector('.pnl-preview');
+    pnlBox.innerHTML = `P&L: $${pnl.toFixed(2)} (${((pnl/acc)*100).toFixed(2)}%)`;
+    pnlBox.className = "pnl-preview " + (pnl >= 0 ? "profit" : "loss");
+    pnlBox.style.display = "block";
+  }
 
-    // Handle file selection via input
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            handleFile(file);
-        }
-    });
+  // --- JSON Upload (multiple trades supported) ---
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
+  const uploadStatus = document.getElementById('uploadStatus');
 
-    // Drag and drop handlers
-    uploadZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadZone.classList.add('dragover');
-    });
+  uploadZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+  uploadZone.addEventListener('dragleave', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); });
+  uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); });
 
-    uploadZone.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
-    });
-
-    uploadZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
-        
-        const file = e.dataTransfer.files[0];
-        if (file) {
-            handleFile(file);
-        }
-    });
-
-    // Handle file processing
-    function handleFile(file) {
-        if (!file.name.endsWith('.json')) {
-            showStatus('Please select a valid JSON file', 'error');
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (event) => {  // Fixed: was event0
-            try {
-                const data = JSON.parse(event.target.result);
-                
-                // Check if it's a single trade object or array of trades
-                const trades = Array.isArray(data) ? data : [data];
-                
-                if (trades.length === 0) {
-                    showStatus('No trade data found in JSON file', 'error');
-                    return;
-                }
-
-                // Fill form with first trade (assuming single trade for this form)
-                const trade = trades[0];
-                fillFormFromTrade(trade);
-                
-                showStatus(`Successfully loaded trade data: ${trade.asset_name || 'Unknown Asset'}`, 'success');
-                
-            } catch (err) {
-                showStatus('Invalid JSON file format', 'error');
-            }
-        };
-        
-        reader.onerror = () => {
-            showStatus('Error reading file', 'error');
-        };
-        
-        reader.readAsText(file);
-    }
-
-    // Fill form fields from trade data
-    function fillFormFromTrade(trade) {
-        const fieldMap = {
-            'asset_name': trade.asset_name,
-            'asset_type': trade.asset_type,
-            'entry_price': trade.entry_price,
-            'exit_price': trade.exit_price,
-            'entry_timestamp': trade.entry_timestamp,
-            'exit_timestamp': trade.exit_timestamp,
-            'account_size': trade.account_size,
-            'fraction_invested': trade.fraction_invested,
-            'direction': trade.direction,
-            'trade_reason': trade.trade_reason,
-            'notes': trade.notes
-        };
-
-        Object.keys(fieldMap).forEach(fieldName => {
-            const element = document.getElementById(fieldName);
-            if (element && fieldMap[fieldName] !== undefined) {
-                element.value = fieldMap[fieldName];
-            }
+  function handleFile(file) {
+    if (!file.name.endsWith('.json')) return showStatus('Please select valid JSON', 'error');
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        const trades = Array.isArray(data) ? data : [data];
+        trades.forEach((t,i) => {
+          if (i===0) fillFormFromTrade(document.querySelector('.trade-block'), t);
+          else addTradeBlock(t);
         });
+        showStatus(`Loaded ${trades.length} trades`, 'success');
+      } catch { showStatus('Invalid JSON format','error'); }
+    };
+    reader.readAsText(file);
+  }
 
-        // Trigger PnL calculation after filling
-        calculatePnL();
-    }
+  function fillFormFromTrade(block, trade) {
+    Object.keys(trade).forEach(k => {
+      const el = block.querySelector(`[name="${k}[]"]`);
+      if (el) el.value = trade[k];
+    });
+    calculatePnL(block.querySelector('[name="entry_price[]"]'));
+  }
 
-    // Show upload status messages
-    function showStatus(message, type) {
-        uploadStatus.textContent = message;
-        uploadStatus.className = `upload-status ${type}`;
-        uploadStatus.style.display = 'block';
-        
-        // Hide after 3 seconds for success messages
-        if (type === 'success') {
-            setTimeout(() => {
-                uploadStatus.style.display = 'none';
-            }, 3000);
-        }
-    }
-
-    // Update direction change to trigger PnL calculation
-    document.getElementById('direction').addEventListener('change', calculatePnL);
+  function showStatus(msg, type) {
+    uploadStatus.textContent = msg;
+    uploadStatus.className = `upload-status ${type}`;
+    uploadStatus.style.display = 'block';
+  }
 </script>
 </body>
 </html>
+
