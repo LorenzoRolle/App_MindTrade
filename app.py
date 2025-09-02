@@ -140,18 +140,18 @@ def trade_input():
 
             new_trade = Trade(
                 user_id=user.id,
-                asset_name=form.get("asset_name", ""),
-                asset_type=form.get("asset_type", "").lower(),
+                asset_name=asset_name[i],
+                asset_type=(asset_types[i] or "").lower(),
                 fraction_invested=fraction_invested,
                 pnl=pnl_value,
                 sold_early=False,
                 held_too_long=False,
-                direction=form.get("direction", "").lower(),
-                trade_reason=form.get("trade_reason", "").lower(),
-                notes=form.get("notes", ""),
+                direction=(directions[i] or "").lower(),
+                trade_reason=(reasons[i] or "").lower(),
+                notes=notes[i],
                 size=position_size,
-                entry_time=entry_time,
-                exit_time=exit_time
+                entry_time=entry_times[i],
+                exit_time=exit_times[i]
             )
 
             db.session.add(new_trade)
