@@ -113,10 +113,10 @@ def trade_input():
         action = request.form.get("action")  # which button was clicked
         form = request.form
         try:
-            entry_price = form.getlist("entry_price[]")
-            exit_price = form.getlist("exit_price[]")
-            account_size = form.getlist("account_size[]")
-            fraction_invested = form.getlist("fraction_invested[]")
+            entry_prices = form.getlist("entry_price[]")
+            exit_prices = form.getlist("exit_price[]")
+            account_sizes = form.getlist("account_size[]")
+            fractions_invested = form.getlist("fraction_invested[]")
         except ValueError:
             return render_template("trade_input.html", error="Please enter valid numeric values.")
         
@@ -129,6 +129,11 @@ def trade_input():
         notes = form.getlist("notes[]")
         
         for i in range(len(asset_name)):
+            entry_price = float(entry_prices[i])
+            exit_price = float(exit_prices[i])
+            account_size = float(account_sizes[i])
+            fraction_invested = float(fractions_invested[i])
+            
             position_size = account_size * fraction_invested
             shares = position_size / entry_price if entry_price != 0 else 0.0
             pnl_value = shares * (exit_price - entry_price)
