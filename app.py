@@ -156,6 +156,8 @@ def trade_input():
 
             db.session.add(new_trade)
             print(f"✅ New trade added for user {username}: {form.get('asset_name', '')}, PNL={pnl_value}")
+            db.session.commit()
+            user=User.query.filter_by(id=user.id).first()
 
             trades_data = [
                 {
@@ -173,7 +175,7 @@ def trade_input():
                 }
                 for t in user.trades
             ]
-        db.session.commit()
+        
         bias_results = detect_all_biases(trades_data)
         return render_template("results.html", bias_results=bias_results, total_trades=len(trades_data))
 
