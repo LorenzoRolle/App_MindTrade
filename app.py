@@ -122,7 +122,7 @@ def trade_input():
         
         entry_times = form.getlist("entry_timestamp[]")
         exit_times = form.getlist("exit_timestamp[]")
-        asset_name = form.getList("asset_name[]")
+        asset_name = form.getlist("asset_name[]")
         asset_types = form.getlist("asset_type[]")
         directions = form.getlist("direction[]")
         reasons = form.getlist("trade_reason[]")
@@ -151,7 +151,6 @@ def trade_input():
 
             db.session.add(new_trade)
             print(f"✅ New trade added for user {username}: {form.get('asset_name', '')}, PNL={pnl_value}")
-            db.session.commit()
 
             trades_data = [
                 {
@@ -169,7 +168,7 @@ def trade_input():
                 }
                 for t in user.trades
             ]
-
+        db.session.commit()
         bias_results = detect_all_biases(trades_data)
         return render_template("results.html", bias_results=bias_results, total_trades=len(trades_data))
 
