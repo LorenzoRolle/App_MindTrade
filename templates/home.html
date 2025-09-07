@@ -1,59 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>MindTrade - Home</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MindTrade – Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; }
-    .container { max-width: 800px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 12px; box-shadow: 0 0 12px rgba(0,0,0,0.1); }
-    h2 { text-align: center; margin-bottom: 20px; color: #333; }
-    .stats { text-align: center; margin-bottom: 25px; }
-    .stats p { margin: 5px 0; font-size: 16px; color: #555; }
-    .trade-list { margin: 20px 0; }
-    .trade-item { padding: 10px; border-bottom: 1px solid #ddd; font-size: 14px; }
-    .buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-    .buttons a { display: block; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold; }
-    .add-btn { background-color: #28a745; color: white; }
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --bg-light: #f9fafb;
+      --text-dark: #1f2937;
+      --text-muted: #6b7280;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      margin: 0;
+    }
+
+    header {
+      padding: 1.5rem 2rem;
+      background-color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container { display: flex; align-items: center; gap: 0.5rem; }
+    .logo { height: 40px; }
+
+    nav a {
+      margin-left: 2rem;
+      text-decoration: none;
+      color: var(--text-dark);
+      font-weight: 600;
+      transition: color 0.3s;
+    }
+
+    nav a:hover { color: var(--primary); }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 5rem 2rem 3rem;
+      background: linear-gradient(to right, var(--primary), #60a5fa);
+      color: white;
+    }
+    .hero h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; }
+    .hero p { font-size: 1.1rem; }
+
+    /* Stats */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin: 3rem auto;
+      max-width: 800px;
+    }
+    .stat-box {
+      flex: 1;
+      background: #fff;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+    .stat-box h2 { font-size: 2rem; color: var(--primary); margin: 0; }
+    .stat-box p { margin-top: 0.5rem; color: var(--text-muted); }
+
+    /* Chart */
+    .chart-section {
+      max-width: 900px;
+      margin: 0 auto 3rem;
+      padding: 2rem;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+    canvas { max-width: 100%; }
+
+    /* Actions */
+    .actions {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+    .actions a {
+      display: inline-block;
+      margin: 0.5rem;
+      padding: 0.9rem 2rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      color: white;
+      transition: background 0.3s;
+    }
+    .add-btn { background-color: #28a745; }
     .add-btn:hover { background-color: #218838; }
-    .view-btn { background-color: #007bff; color: white; }
+    .view-btn { background-color: #007bff; }
     .view-btn:hover { background-color: #0056b3; }
-    .analysis-btn { background-color: #6f42c1; color: white; }
+    .analysis-btn { background-color: #6f42c1; }
     .analysis-btn:hover { background-color: #563d7c; }
-    .user-info { text-align: right; margin-bottom: 15px; color: #666; }
-    .user-info a { color: #007bff; text-decoration: none; }
-    .user-info a:hover { text-decoration: underline; }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.9rem;
+      color: #999;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="user-info">
-      Welcome, {{ session.user }} | <a href="/logout">Logout</a>
-    </div>
 
-    <h2>📊 Your Trading Dashboard</h2>
-
-    <div class="stats">
-      <p><strong>Total Trades:</strong> {{ total_trades }}</p>
-      {% if trades %}
-        <div class="trade-list">
-          <h3>Recent Trades</h3>
-          {% for trade in trades[:3] %}
-            <div class="trade-item">
-              {{ trade.asset_name or 'Unknown Asset' }} – PnL: {{ "%.2f"|format(trade.pnl) }}
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p>No trades yet. Start by adding your first trade!</p>
-      {% endif %}
-    </div>
-
-    <div class="buttons">
-      <a href="/trade_input" class="add-btn">➕ Add Another Trade</a>
-      <a href="/view_notifications" class="view-btn">📑 View Trades</a>
-      <a href="/results" class="analysis-btn">🧠 Full Analysis</a>
-    </div>
+<header>
+  <div class="logo-container">
+    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="MindTrade Logo" class="logo" />
+    <span style="font-weight: 800; font-size: 1.4rem;">MindTrade</span>
   </div>
+  <nav>
+    <a href="/view_notifications">View Trades</a>
+    <a href="/results">Analysis</a>
+    <a href="/logout">Logout</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h2>Welcome back, {{ session.user }} 👋</h2>
+  <p>Here’s a quick overview of your trading journey so far.</p>
+</section>
+
+<!-- Stats -->
+<div class="stats">
+  <div class="stat-box">
+    <h2>{{ total_trades }}</h2>
+    <p>Total Trades</p>
+  </div>
+  <div class="stat-box">
+    {% set total_pnl = trades|map(attribute='pnl')|sum %}
+    <h2>{{ "%.2f"|format(total_pnl) }}</h2>
+    <p>Cumulative P&L</p>
+  </div>
+</div>
+
+<!-- Chart -->
+<div class="chart-section">
+  <h3>Performance Over Time</h3>
+  <canvas id="pnlChart" height="120"></canvas>
+</div>
+
+<!-- Actions -->
+<div class="actions">
+  <a href="/trade_input" class="add-btn">➕ Add Trade</a>
+  <a href="/view_notifications" class="view-btn">📑 View Trades</a>
+  <a href="/results" class="analysis-btn">🧠 Full Analysis</a>
+</div>
+
+<footer>
+  &copy; 2025 MindTrade. All rights reserved.
+</footer>
+
+<script>
+  const ctx = document.getElementById('pnlChart').getContext('2d');
+  const pnlChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: {{ trades|map(attribute='asset_name')|list|tojson }},
+      datasets: [{
+        label: 'PnL',
+        data: {{ trades|map(attribute='pnl')|list|tojson }},
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37,99,235,0.1)',
+        tension: 0.3,
+        fill: true,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { title: { display: true, text: 'PnL ($)' } },
+        x: { title: { display: true, text: 'Trades' } }
+      }
+    }
+  });
+</script>
+
 </body>
 </html>
-
