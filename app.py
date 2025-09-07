@@ -97,7 +97,7 @@ def login():
         if not user or user.password != password:
             return render_template("login.html", error="Invalid credentials.")
         session["user"] = username
-        return redirect(url_for("trade_input"))
+        return redirect(url_for("home"))
     return render_template("login.html")
 
 @app.route("/logout")
