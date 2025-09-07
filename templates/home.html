@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MindTrade - Home</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 12px; box-shadow: 0 0 12px rgba(0,0,0,0.1); }
+    h2 { text-align: center; margin-bottom: 20px; color: #333; }
+    .stats { text-align: center; margin-bottom: 25px; }
+    .stats p { margin: 5px 0; font-size: 16px; color: #555; }
+    .trade-list { margin: 20px 0; }
+    .trade-item { padding: 10px; border-bottom: 1px solid #ddd; font-size: 14px; }
+    .buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+    .buttons a { display: block; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: bold; }
+    .add-btn { background-color: #28a745; color: white; }
+    .add-btn:hover { background-color: #218838; }
+    .view-btn { background-color: #007bff; color: white; }
+    .view-btn:hover { background-color: #0056b3; }
+    .analysis-btn { background-color: #6f42c1; color: white; }
+    .analysis-btn:hover { background-color: #563d7c; }
+    .user-info { text-align: right; margin-bottom: 15px; color: #666; }
+    .user-info a { color: #007bff; text-decoration: none; }
+    .user-info a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="user-info">
+      Welcome, {{ session.user }} | <a href="/logout">Logout</a>
+    </div>
+
+    <h2>📊 Your Trading Dashboard</h2>
+
+    <div class="stats">
+      <p><strong>Total Trades:</strong> {{ total_trades }}</p>
+      {% if trades %}
+        <div class="trade-list">
+          <h3>Recent Trades</h3>
+          {% for trade in trades[:3] %}
+            <div class="trade-item">
+              {{ trade.asset_name or 'Unknown Asset' }} – PnL: {{ "%.2f"|format(trade.pnl) }}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No trades yet. Start by adding your first trade!</p>
+      {% endif %}
+    </div>
+
+    <div class="buttons">
+      <a href="/trade_input" class="add-btn">➕ Add Another Trade</a>
+      <a href="/view_notifications" class="view-btn">📑 View Trades</a>
+      <a href="/results" class="analysis-btn">🧠 Full Analysis</a>
+    </div>
+  </div>
+</body>
+</html>
+

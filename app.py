@@ -60,7 +60,13 @@ def intro():
 
 @app.route("/home")
 def home():
-    return render_template("intro.html")
+    username = session.get("user")
+    if not username:
+        return redirect(url_for("login"))
+
+    user = User.query.filter_by(username=username).first()
+    trades = user.trades if user else []
+    return render_template("home.html", trades=trades, total_trades=len(trades))
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
