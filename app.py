@@ -207,7 +207,7 @@ def results():
     trades = user.trades if user else []
     
     if len(trades) < 2:
-        return render_template("results.html", message="You need at least 2 trades to analyze your patterns.", total_trades=len(trades))
+        return render_template("results.html", message="You need at least 2 trades to analyze your patterns.", total_trades=len(trades), bias_results=None)
     trades_data = [
         {
             "asset_type": t.asset_type,
