@@ -83,7 +83,7 @@
     </div>
 
     <!-- Detected Biases Alert -->
-    {%if bias_results and if bias_results.detected_biases %}
+    {%if bias_results.detected_biases %}
     <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-8 rounded-r-lg">
       <h3 class="text-lg font-semibold text-yellow-800 mb-2">⚠️ Behavioral Patterns Detected</h3>
       <div class="flex flex-wrap gap-2">
