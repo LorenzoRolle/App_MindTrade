@@ -1,6 +1,10 @@
 from typing import List, Dict, Any
 import re
 
+"""
+to be explained (all)s
+"""
+
 def _text_contains_any(text: str, keywords: List[str]) -> bool:
     text_lower = text.lower()
     return any(k in text_lower for k in keywords)
