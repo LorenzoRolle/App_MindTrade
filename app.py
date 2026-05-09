@@ -7,14 +7,14 @@ import os
 app = Flask(__name__)
 app.secret_key = os.environ.get("MINDTRADE_SECRET", "dev-secret")
 
-# SQLite database config
+
 import os
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-# Use DATABASE_URL env var if available (Render will provide it), else fallback to SQLite
+
 db_url = os.environ.get("DATABASE_URL")
 if db_url and db_url.startswith("postgres://"):
-    # Render uses old postgres:// scheme, SQLAlchemy needs postgresql://
+   
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = db_url or f"sqlite:///{os.path.join(BASE_DIR, 'mindtrade.db')}"
