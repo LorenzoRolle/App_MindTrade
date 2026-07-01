@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, redirect, session, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from algoritmo import detect_all_biases
@@ -8,13 +7,10 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("MINDTRADE_SECRET", "dev-secret")
 
 
-import os
-
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 db_url = os.environ.get("DATABASE_URL")
 if db_url and db_url.startswith("postgres://"):
-   
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = db_url or f"sqlite:///{os.path.join(BASE_DIR, 'mindtrade.db')}"
@@ -38,14 +34,17 @@ class Trade(db.Model):
     asset_type = db.Column(db.String(20))
     fraction_invested = db.Column(db.Float)
     pnl = db.Column(db.Float)
-    sold_early = db.Column(db.Boolean, default=False)
-    held_too_long = db.Column(db.Boolean, default=False)
     direction = db.Column(db.String(10))
     trade_reason = db.Column(db.String(50))
     notes = db.Column(db.Text)
     size = db.Column(db.Float)
     entry_time = db.Column(db.String(50))
     exit_time = db.Column(db.String(50))
+    # NOTE: sold_early / held_too_long columns removed.
+    # detect_loss_aversion() now derives this signal itself from
+    # entry_time/exit_time + pnl instead of relying on flags nobody ever set.
+    # If your existing DB still has those columns, that's fine — SQLAlchemy
+    # just won't touch them; drop them later with a migration if you want.
 
 # -------------------
 # Routes
@@ -125,7 +124,7 @@ def trade_input():
             fractions_invested = form.getlist("fraction_invested[]")
         except ValueError:
             return render_template("trade_input.html", error="Please enter valid numeric values.")
-        
+
         entry_times = form.getlist("entry_timestamp[]")
         exit_times = form.getlist("exit_timestamp[]")
         asset_name = form.getlist("asset_name[]")
@@ -133,20 +132,29 @@ def trade_input():
         directions = form.getlist("direction[]")
         reasons = form.getlist("trade_reason[]")
         notes = form.getlist("notes[]")
-        
+
+        # Sanity check: if this comes back empty, your trade_input.html form
+        # fields are not named with "[]" (e.g. name="asset_name" instead of
+        # name="asset_name[]"), and nothing below will ever run.
+        if not asset_name:
+            return render_template(
+                "trade_input.html",
+                error="No trade data received — check that form field names end in '[]'."
+            )
+
         for i in range(len(asset_name)):
             entry_price = float(entry_prices[i])
             exit_price = float(exit_prices[i])
             account_size = float(account_sizes[i])
             fraction_invested = float(fractions_invested[i])
-            
+
             position_size = account_size * fraction_invested
             shares = position_size / entry_price if entry_price != 0 else 0.0
 
             direction_i = (directions[i] or "").lower()
             if direction_i == "short":
                 pnl_value = shares * (entry_price - exit_price)
-            else:  # "long" o default
+            else:  # "long" or default
                 pnl_value = shares * (exit_price - entry_price)
 
             new_trade = Trade(
@@ -155,38 +163,45 @@ def trade_input():
                 asset_type=(asset_types[i] or "").lower(),
                 fraction_invested=fraction_invested,
                 pnl=pnl_value,
-                sold_early=False,
-                held_too_long=False,
-                direction=(directions[i] or "").lower(),
+                direction=direction_i,
                 trade_reason=(reasons[i] or "").lower(),
                 notes=notes[i],
                 size=position_size,
                 entry_time=entry_times[i],
                 exit_time=exit_times[i]
             )
-
             db.session.add(new_trade)
-            print(f"✅ New trade added for user {username}: {form.get('asset_name', '')}, PNL={pnl_value}")
-            db.session.commit()
-            user=User.query.filter_by(id=user.id).first()
+            print(f"✅ New trade queued for user {username}: {asset_name[i]}, PNL={pnl_value}")
 
-            trades_data = [
-                {
-                    "asset_type": t.asset_type,
-                    "fraction_invested": t.fraction_invested,
-                    "pnl": t.pnl,
-                    "sold_early": t.sold_early,
-                    "held_too_long": t.held_too_long,
-                    "direction": t.direction,
-                    "trade_reason": t.trade_reason,
-                    "notes": t.notes,
-                    "size": t.size,
-                    "entry_time": t.entry_time,
-                    "exit_time": t.exit_time
-                }
-                for t in user.trades
-            ]
-        
+        # Single commit after the loop, not once per trade — avoids partial
+        # writes if one row in a multi-row submit fails halfway through.
+        db.session.commit()
+
+        # Refresh the user object so user.trades reflects everything just committed.
+        user = User.query.filter_by(id=user.id).first()
+
+        trades_data = [
+            {
+                "asset_type": t.asset_type,
+                "fraction_invested": t.fraction_invested,
+                "pnl": t.pnl,
+                "direction": t.direction,
+                "trade_reason": t.trade_reason,
+                "notes": t.notes,
+                "size": t.size,
+                "entry_time": t.entry_time,
+                "exit_time": t.exit_time
+            }
+            for t in user.trades
+        ]
+
+        if len(trades_data) < 2:
+            return render_template(
+                "results.html",
+                message="You need at least 2 trades to analyze your patterns.",
+                total_trades=len(trades_data)
+            )
+
         bias_results = detect_all_biases(trades_data)
         return render_template("results.html", bias_results=bias_results, total_trades=len(trades_data))
 
@@ -210,16 +225,15 @@ def results():
 
     user = User.query.filter_by(username=username).first()
     trades = user.trades if user else []
-    
+
     if len(trades) < 2:
-        return render_template("results.html", message="You need at least 2 trades to analyze your patterns.")
+        return render_template("results.html", message="You need at least 2 trades to analyze your patterns.", total_trades=len(trades))
+
     trades_data = [
         {
             "asset_type": t.asset_type,
             "fraction_invested": t.fraction_invested,
             "pnl": t.pnl,
-            "sold_early": t.sold_early,
-            "held_too_long": t.held_too_long,
             "direction": t.direction,
             "trade_reason": t.trade_reason,
             "notes": t.notes,
