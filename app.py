@@ -142,7 +142,12 @@ def trade_input():
             
             position_size = account_size * fraction_invested
             shares = position_size / entry_price if entry_price != 0 else 0.0
-            pnl_value = shares * (exit_price - entry_price)
+
+            direction_i = (directions[i] or "").lower()
+            if direction_i == "short":
+                pnl_value = shares * (entry_price - exit_price)
+            else:  # "long" o default
+                pnl_value = shares * (exit_price - entry_price)
 
             new_trade = Trade(
                 user_id=user.id,
